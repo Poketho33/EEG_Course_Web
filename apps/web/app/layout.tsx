@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import type { ReactNode } from 'react';
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth";
+import { authOptions } from "../auth/auth";
 
 export const metadata: Metadata = {
   title: "Create Next App",
