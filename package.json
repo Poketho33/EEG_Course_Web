@@ -23,7 +23,6 @@
     "node": ">=18"
   },
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ]
 }
