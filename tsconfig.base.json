@@ -11,10 +11,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
-    "paths": {
-      "@repo/prisma": ["packages/prisma/src"],
-      "@repo/trpc": ["packages/trpc/src"]
-    },
     "resolveJsonModule": true
   }
 }
