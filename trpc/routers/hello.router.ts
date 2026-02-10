@@ -1,19 +1,16 @@
 import { z } from 'zod';
-import { baseProcedure, createTRPCRouter } from '../init';
+import { createTRPCRouter, procedure } from '../init';
 
 export const helloRouter = createTRPCRouter({
-  getMessage: baseProcedure
+  getMessage: procedure
     .input(
       z.object({
-        text: z.string().optional(), // optional text
+        text: z.string().min(1),
       }),
     )
-    .query(({ ctx, input }) => {
-      const name =
-        ctx.user?.email || input.text || "World"; // use logged-in user, input, or default
-
+    .query(({ input }) => {
       return {
-        greeting: `Hello ${name}!`,
+        greeting: `Hello ${input.text}!`,
       };
     }),
 });
