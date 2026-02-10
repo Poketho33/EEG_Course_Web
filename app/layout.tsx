@@ -1,4 +1,4 @@
-import Header from "./Header";
+import Header from "../components/Header";
 import Providers from "./providers";
 
 import type { Metadata } from "next";
@@ -16,7 +16,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang="en">
       <body>
         <Providers>
-          <div className="min-h-screen flex flex-col">
+          <div className="min-h-screen flex">
             <Header />
             <main className="flex-1">{children}</main>
           </div>
