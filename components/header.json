@@ -1,0 +1,22 @@
+{
+    "header": [
+        {
+            "label": "Home",
+            "path": "/"
+        },
+        {
+            "label": "Courses",
+            "path": "/courses",
+            "children": [
+                {
+                    "label": "Electrical source imaging",
+                    "path": "/courses/electrical-source-imaging"
+                },
+                {
+                    "label": "Functional Connectivity",
+                    "path": "/courses/functional-connectivity"
+                }
+            ]
+        }
+    ]
+}

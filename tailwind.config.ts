@@ -12,6 +12,7 @@ export default {
         // from globals css
         background: "var(--background)",
         foreground: "var(--foreground)",
+        secondary: "var(--secondary)",
       },
     },
   },
