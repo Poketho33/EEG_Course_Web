@@ -13,6 +13,7 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
         secondary: "var(--secondary)",
+        lighter: "var(--lighter)",
       },
     },
   },

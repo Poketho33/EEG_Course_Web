@@ -11,7 +11,6 @@
     "prisma:generate": "npx prisma generate",
     "prisma:generate:cli": "pnpm dlx @better-auth/cli@latest generate",
     "prisma:migrate:deploy": "npx prisma migrate deploy",
-    "postinstall": "pnpm run prisma:generate",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
   },
@@ -19,10 +18,12 @@
     "@neondatabase/serverless": "^1.0.1",
     "@prisma/client": "^7.3.0",
     "@tanstack/react-query": "5",
+    "katex": "^0.16.38",
     "next": "16.1.6",
     "plotly.js": "^3.4.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-katex": "^3.1.0",
     "react-plotly.js": "^2.6.0",
     "zod": "^4.3.6"
   },
@@ -37,6 +38,7 @@
     "@types/plotly.js": "^3.0.10",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-katex": "^3.0.4",
     "@types/react-plotly.js": "^2.6.4",
     "eslint": "^9",
     "eslint-config-next": "15.1.7",
