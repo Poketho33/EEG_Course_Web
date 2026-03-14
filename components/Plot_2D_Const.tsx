@@ -45,7 +45,7 @@ export default function App() {
     const [editingCell, setEditingCell] = useState<{ i: number; field: keyof J_Piece } | null>(null);
 
     const [Jpw, setJpw] = useState<J_Piece[]>([
-        { amplitude: J0, angle: Math.PI / 2, alpha: 0.2 },
+        { amplitude: J0, angle: 0 * Math.PI / 2, alpha: 0.2 },
         { amplitude: -J0, angle: Math.PI, alpha: 0.2 },
     ]);
 
