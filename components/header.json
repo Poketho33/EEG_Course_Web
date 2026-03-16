@@ -9,12 +9,12 @@
             "path": "/courses",
             "children": [
                 {
-                    "label": "Electrical source imaging",
-                    "path": "/courses/electrical-source-imaging"
+                    "label": "tDCS",
+                    "path": "/courses/tdcs/theory"
                 },
                 {
-                    "label": "Functional Connectivity",
-                    "path": "/courses/functional-connectivity"
+                    "label": "TMS",
+                    "path": "/courses/tms/theory"
                 }
             ]
         }
