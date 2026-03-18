@@ -1,16 +1,27 @@
 'use client'
 
-import { useState } from 'react';
-import { InlineMath } from 'react-katex';
+import { useState, useEffect } from 'react';
 
-export default function ExplanationBox() {
+function randomPastelColor() {
+    const hue = Math.floor(Math.random() * 360);
+    return `hsl(${hue}, 70%, 80%)`;
+}
+
+export default function Derivation({ children }: { children: React.ReactNode }) {
+    const [color, setColor] = useState('#e0e0e0');
+
+    useEffect(() => {
+        setColor(randomPastelColor());
+    }, []);
+
     const [open, setOpen] = useState(false);
 
     return (
         <div className="p-4 bg-lighter rounded-md relative">
             <p className="pb-1 font-bold">Explanation</p>
             <button
-                className="w-6 h-6 bg-secondary rounded-full absolute right-4 top-4 fill-foreground cursor-pointer flex items-center justify-center"
+                style={{ backgroundColor: color }}    
+                className="w-6 h-6 bg-secondary rounded-full absolute right-4 top-4 fill-background cursor-pointer flex items-center justify-center"
                 onClick={() => setOpen(prev => !prev)}
             >
                 <svg
@@ -21,11 +32,13 @@ export default function ExplanationBox() {
                     <path d="M338.752 104.704a64 64 0 000 90.496l316.8 316.8-316.8 316.8a64 64 0 0090.496 90.496l362.048-362.048a64 64 0 000-90.496L429.248 104.704a64 64 0 00-90.496 0z" />
                 </svg>
             </button>
-            {open && (
-                <p className="mt-2">
-                    In a homogeneous medium <InlineMath math="\sigma" /> is a constant, so it can be divided out.
-                </p>
-            )}
+            <div
+                className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+            >
+                <div className="overflow-hidden">
+                    <div className="mt-2">{children}</div>
+                </div>
+            </div>
         </div>
     );
 }
