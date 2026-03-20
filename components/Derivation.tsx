@@ -1,11 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-
-function randomPastelColor() {
-    const hue = Math.floor(Math.random() * 360);
-    return `hsl(${hue}, 70%, 80%)`;
-}
+import { randomPastelColor } from '@/lib/UI/RandomColor';
 
 export default function Derivation({ children }: { children: React.ReactNode }) {
     const [color, setColor] = useState('#e0e0e0');

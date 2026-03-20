@@ -1,20 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { usePathname } from "next/navigation";
 import headerData from "./header.json";
+import { randomPastelColor } from '@/lib/UI/RandomColor';
+import { useState, useEffect } from "react";
 
 export default function Header() {
+  const pathname = usePathname();
   const header = headerData.header;
 
+    const [color, setColor] = useState('#e0e0e0');
+
+    useEffect(() => {
+        setColor(randomPastelColor());
+    }, []);
+
   return (
-    <aside className="h-screen overflow-y-auto sticky top-0 w-[250px] bg-background shadow-md px-4 py-4 border-r-2 border-gray-900">
+    <aside className="h-screen overflow-y-auto sticky top-0 w-[250px] bg-background shadow-md p-8 border-r-2 border-gray-900">
       <nav className="h-full flex flex-col justify-between items-start">
         <Link
           href="/"
           className="text-xl font-bold text-foreground hover:text-secondary transition-colors"
         >
-          EEG Analysis
+          Name
         </Link>
 
         <ul className="w-full">
@@ -32,10 +41,13 @@ export default function Header() {
               {item.children && (
                 <ul className="flex flex-col ml-2 mt-1 gap-1">
                   {item.children.map((child) => (
-                    <li key={child.label} className="hover:bg-secondary transition-colors p-2 cursor-pointer rounded-md">
+                    <li 
+                      key={child.label} 
+                      style={{ backgroundColor: pathname === child.path ? color : "" }}
+                      className="hover:bg-secondary transition-colors p-2 cursor-pointer rounded-md">
                       <Link
                         href={child.path}
-                        className="text-md text-foreground"
+                        className={`text-md ${pathname === child.path ? "text-background" : "text-foreground"}`}
                       >
                         {child.label}
                       </Link>

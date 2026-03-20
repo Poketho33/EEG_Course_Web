@@ -5,6 +5,8 @@ import type { Data } from 'plotly.js';
 import 'katex/dist/katex.min.css';
 import { BlockMath, InlineMath } from 'react-katex';
 
+import Derivation from "@/components/Derivation";
+
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
 type J_Piece = {
@@ -118,7 +120,7 @@ export default function App() {
             [0, '#000000'],
             [0.365, '#ff0000'],
             [0.746, '#ffff00'],
-            [1, '#ffffff'],
+            [1, '#ffffff'], 
         ],
         zsmooth: 'best',
         line: { width: 0 },
@@ -129,18 +131,25 @@ export default function App() {
     }];
 
     return (
-        <div className="flex justify-between items-center px-16 bg-lighter rounded-xl">
-            <BlockMath math={katexString} />
-            <Plot
-                data={data}
-                layout={{
-                    width: 420,
-                    height: 420,
-                    title: { text: 'Potential field' },
-                    paper_bgcolor: 'transparent',
-                    plot_bgcolor: 'transparent',
-                }}
-            />
+        <div className="flex flex-col">
+            <div className="flex justify-between items-center px-16 bg-lighter rounded-xl -mb-3">
+                <BlockMath math={katexString} />
+                <Plot
+                    data={data}
+                    layout={{
+                        width: 420,
+                        height: 420,
+                        title: { text: 'Potential field' },
+                        paper_bgcolor: 'transparent',
+                        plot_bgcolor: 'transparent',
+                    }}
+                />
+            </div>
+            <Derivation>
+                <p className="">
+
+                </p>
+            </Derivation>
         </div>
     );
 }
