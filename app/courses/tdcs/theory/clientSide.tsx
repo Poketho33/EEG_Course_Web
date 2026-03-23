@@ -114,16 +114,25 @@ export default function ClientSide() {
                 <BlockMath math="A_n = \frac {1}{\sigma n R^{n-1} \pi} \int_{0}^{2 \pi} J(\theta) \cos(n \theta) d \theta" />
                 <BlockMath math="B_n = \frac {1}{\sigma n R^{n-1} \pi} \int_{0}^{2 \pi} J(\theta) \sin(n \theta) d \theta" />
                 
-                <Derivation>
-                    <p className="">
+            </div>
+            <Derivation>
+                <p>
+                    The orthogonality of sinusoids is used:
+                </p>
+                <BlockMath math='\int_0^{2\pi} J(\theta) \cos(m\theta)\, d\theta = \sum_{n=1}^{\infty} \left[ \alpha_n \underbrace{\int_0^{2\pi} \cos(n\theta)\cos(m\theta)\,d\theta}_{\pi \,\delta_{nm}} + \beta_n \underbrace{\int_0^{2\pi} \sin(n\theta)\cos(m\theta)\,d\theta}_{0} \right]'/>
+                <BlockMath math='\int_0^{2\pi} J(\theta) \cos(m\theta)\, d\theta = \alpha_m \pi = \sigma m R^{m-1} A_m \pi' />
+                <p className="">
+                    Due to the dummy natures of m and n, the m is replaced with n for the final solution.
+                </p>
+            </Derivation>
 
-                    </p>
-                </Derivation>
-
+            <div className="space-y-6 max-w-[600px]">
                 <p className="">
                     The final result is presented in an interactive plot. The explanation and calculation are given under it.
                 </p>
+                
             </div>
+
             <Plot_2D_Const />
         </div>
     );

@@ -7,6 +7,7 @@
   --foreground: #0c0c0c;
   --secondary: #c72125;
   --lighter: #1a1a1a;
+  --lighter2: #363636;
 }
 
 @media (prefers-color-scheme: dark) {

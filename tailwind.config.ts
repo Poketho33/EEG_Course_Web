@@ -14,6 +14,7 @@ export default {
         foreground: "var(--foreground)",
         secondary: "var(--secondary)",
         lighter: "var(--lighter)",
+        lighter2: "var(--lighter2)",
       },
     },
   },
