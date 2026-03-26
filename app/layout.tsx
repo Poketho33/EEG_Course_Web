@@ -1,5 +1,4 @@
 import Header from "../components/Header";
-import Providers from "./providers";
 
 import type { Metadata } from "next";
 import "./globals.css";
@@ -15,12 +14,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <Providers>
           <div className="min-h-screen flex">
             <Header />
             <main className="flex-1">{children}</main>
           </div>
-        </Providers>
       </body>
     </html>
   );

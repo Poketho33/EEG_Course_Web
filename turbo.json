@@ -21,7 +21,6 @@
       "cache": false,
       "persistent": true
     }
-  },
-  "globalEnv": ["AUTH_SECRET", "DATABASE_URL", "API_JWT_SECRET", "WEB_URL"]
+  }
 }
 
