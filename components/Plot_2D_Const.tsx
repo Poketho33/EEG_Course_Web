@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import type { Data } from 'plotly.js';
 import 'katex/dist/katex.min.css';
-import { BlockMath } from 'react-katex';
+import { BlockMath, InlineMath } from 'react-katex';
 
 import Derivation from "@/components/Derivation";
 import Slider from "@/components/Slider";
@@ -13,7 +13,7 @@ const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
 enum plotTypes{
     potential,
-    electrical
+    electric
 };
 
 type J_Piece = {
@@ -72,12 +72,16 @@ const linspace = (start: number, stop: number, n: number) =>
 
 // Parameters
 const R = 0.01, sigma = 0.33, I_tot = 1e-3, alpha = 0.2;
-const katexString = "J(\\theta) = \\begin{cases} J_0 & \\colorbox{blue}{} \\\\ -J_0 & \\colorbox{red}{} \\\\ 0 & \\text{otherwise} \\end{cases}";
 const Ngrid = 200;
 
 export default function App() {
     // Use States
     const [plotNum, setPlotNum] = useState<plotTypes>(plotTypes.potential);
+    const [nodeOrder, setNodeOrder] = useState(false);
+    const katexString = nodeOrder ? 
+        "J(\\theta) = \\begin{cases} \\frac{I_0}{2 \\alpha R} & \\colorbox{red}{} \\\\ -\\frac{I_0}{2 \\beta R} & \\colorbox{blue}{} \\\\ 0 & \\text{otherwise} \\end{cases}"
+        : 
+        "J(\\theta) = \\begin{cases} \\frac{I_0}{2 \\alpha R} & \\colorbox{blue}{} \\\\ -\\frac{I_0}{2 \\beta R} & \\colorbox{red}{} \\\\ 0 & \\text{otherwise} \\end{cases}";
     // Piecewise J - init
     const [Jpw, setJpw] = useState<J_Piece[]>([
         { sign: 1, angle: 0, alpha: 0.2 },
@@ -189,24 +193,46 @@ export default function App() {
     return (
         <div className="flex flex-col">
             <div className="flex justify-between items-center px-16 py-4 bg-lighter rounded-xl -mb-3">
-                <div className="">
+                <div className="space-y-10">
                     <BlockMath math={katexString} />
-                    
-                    {/* slider */}
-                    {Jpw.map((piece, i) => (
+
+                    <div className="flex flex-col justify-center items-center">
+                        <div className="flex items-center gap-3 ">
+                            <span className={nodeOrder ? "text-red-400" : "text-blue-400"}>Anode</span>
+                            <button
+                                onClick={() => {
+                                    setNodeOrder(prev => !prev);
+                                    setJpw(prev => [
+                                        { ...prev[0], sign: -prev[0].sign },
+                                        { ...prev[1], sign: -prev[1].sign },
+                                    ]);
+                                }}
+                                className="px-3 py-1 rounded bg-neutral-700 text-sm"
+                            >
+                                ⇄
+                            </button>
+                            <span className={nodeOrder ? "text-blue-400" : "text-red-400"}>Cathode</span>
+                        </div>
+
+                        {/* slider */}
                         <Slider
-                            key={i}
-                            lo={piece.angle - piece.alpha}
-                            hi={piece.angle + piece.alpha}
-                            onChange={(lo, hi) => {
-                                setJpw(prev => prev.map((p, j) => j !== i ? p : {
-                                    ...p,
-                                    angle: (lo + hi) / 2,
-                                    alpha: (hi - lo) / 2,
-                                }));
+                            values={[
+                                Jpw[0].angle - Jpw[0].alpha,
+                                Jpw[0].angle + Jpw[0].alpha,
+                                Jpw[1].angle - Jpw[1].alpha,
+                                Jpw[1].angle + Jpw[1].alpha,
+                            ]}
+                            onChange={([lo0, hi0, lo1, hi1]) => {
+                                const seg0 = { angle: (lo0 + hi0) / 2, alpha: (hi0 - lo0) / 2 };
+                                const seg1 = { angle: (lo1 + hi1) / 2, alpha: (hi1 - lo1) / 2 };
+
+                                setJpw([
+                                    { ...Jpw[0], ...seg0, sign: nodeOrder ? -1 : 1 },
+                                    { ...Jpw[1], ...seg1, sign: nodeOrder ? 1 : -1 },
+                                ]);
                             }}
                         />
-                    ))}
+                    </div>
                 </div>
 
                 {/* Plot */}
@@ -219,10 +245,10 @@ export default function App() {
                             Potential
                         </button>
                         <button
-                            className={plotNum === plotTypes.electrical ? "bg-secondary h-full p-2 rounded-lg" : "p-2 rounded-lg"}
-                            onClick={() => setPlotNum(plotTypes.electrical)}
+                            className={plotNum === plotTypes.electric ? "bg-secondary h-full p-2 rounded-lg" : "p-2 rounded-lg"}
+                            onClick={() => setPlotNum(plotTypes.electric)}
                         >
-                            Electrical
+                            Electric
                         </button>
                     </div>
                     <Plot
@@ -232,11 +258,12 @@ export default function App() {
                 </div>
             </div>
             <Derivation>
-                {/* <BlockMath math="A_n = \frac {1}{\sigma n R^{n-1} \pi} \int_{0}^{2 \pi} J(\theta) \cos(n \theta) d \theta" />
-                <BlockMath math="B_n = \frac {1}{\sigma n R^{n-1} \pi} \int_{0}^{2 \pi} J(\theta) \sin(n \theta) d \theta" /> */}
                 <p className="">
-
+                    The coefficients are integrated over <InlineMath math="\theta"/> with the specified current density.
+                    These coefficents are then set in the Fourier series. Which is calculated for the first 15 terms for a grid of points.
+                    The electric field is then found by the potential field with the formula:
                 </p>
+                <BlockMath math="E = -\nabla\phi" />
             </Derivation>
         </div>
     );

@@ -128,7 +128,7 @@ export default function ClientSide() {
 
             <div className="space-y-6 max-w-[600px]">
                 <p className="">
-                    The final result is presented in an interactive plot. The explanation and calculation are given under it.
+                    The final result is presented in an interactive plot. The explanation and calculation are given below it.
                 </p>
                 
             </div>
