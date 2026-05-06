@@ -13,10 +13,10 @@
   },
   "dependencies": {
     "katex": "^0.16.38",
-    "next": "16.1.6",
+    "next": "16.2.4",
     "plotly.js": "^3.4.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "react-katex": "^3.1.0",
     "react-plotly.js": "^2.6.0"
   },
