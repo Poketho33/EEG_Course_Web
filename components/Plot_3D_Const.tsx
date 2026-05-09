@@ -4,47 +4,103 @@ import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import type { Data, Layout } from 'plotly.js';
 
+import { linspace } from '@/lib/math/MathLibFunctions';
+
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
 export default function Plot_3D() {
-    const plotData = useMemo(() => {
-        const size = 50;
-        const x: number[][] = [];
-        const y: number[][] = [];
-        const z: number[][] = [];
-        const v: number[][] = [];
+    // Parameters
+    const R = 0.1, sigma = 0.33, I_tot = 1e-3, alpha = 0.6;
+    const Ngrid = 100, L_max  = 25;
+    const J_0 = I_tot / (2 * Math.PI * R**2 * (1 - Math.cos(alpha)));
 
-        for (let i = 0; i <= size; i++) {
-            const theta = (i / size) * Math.PI;
-            const xRow: number[] = [];
-            const yRow: number[] = [];
-            const zRow: number[] = [];
-            const vRow: number[] = [];
+    // Electrode positions [theta, phi]
+    const posA = [0, 0];
+    const posC = [Math.PI/2, 0];
 
-            for (let j = 0; j <= size; j++) {
-                const phi = (j / size) * 2 * Math.PI;
+    // Grid (spherical coords)
+    const xvec = linspace(-R, R, Ngrid);
 
-                const xVal = Math.sin(theta) * Math.cos(phi);
-                const yVal = Math.sin(theta) * Math.sin(phi);
-                const zVal = Math.cos(theta);
+    const points = useMemo(() => {
+        const points = [];
 
-                xRow.push(xVal);
-                yRow.push(yVal);
-                zRow.push(zVal);
-                vRow.push(yVal *  Math.sin(phi)); 
+        for (let i = 0; i < Ngrid; i++) {
+            for (let j = 0; j < Ngrid; j++) {
+                for (let k = 0; k < Ngrid; k++) {
+                    const x = xvec[i];
+                    const y = xvec[j];
+                    const z = xvec[k];
+                    
+                    const r = Math.sqrt(x**2 + y**2 + z**2);
+                    
+                    // Mask
+                    if (r <= R) { 
+                        let theta = Math.acos(z / r);
+                        let phi = Math.atan2(y, x);
+                        let cosGammaA = Math.cos(theta) * Math.cos(posA[0]) + Math.sin(theta) * Math.sin(posA[0]) * Math.cos(phi - posA[2]);
+                        let cosGammaC = Math.cos(theta) * Math.cos(posC[0]) + Math.sin(theta) * Math.sin(posC[0]) * Math.cos(phi - posC[2]);
+
+                        points.push({
+                            x: x,
+                            y: y,
+                            z: z,
+                            r: r,
+                            theta: theta,
+                            phi: phi,
+                            V: 0,
+                            cosGammaA: cosGammaA,
+                            cosGammaC: cosGammaC,
+
+                            // Bonnet's recursion for the cosGamma legendre functions
+                            pPrevA: 1,
+                            pCurrA: cosGammaA,             
+                            pPrevC: 1,
+                            pCurrC: cosGammaC
+                        });
+                    }
+                }
             }
-            x.push(xRow);
-            y.push(yRow);
-            z.push(zRow);
-            v.push(vRow);
         }
+        return points;
+    }, [R, Ngrid]); // might need another useMemo for the recalculation of cosGammaA/C on posA/C change
+
+
+
+    const plotData = useMemo(() => {
+        // Bonnet's recursion
+        let pPrevCap = 1;
+        let pCurrCap = Math.cos(alpha);
+
+        points.forEach(point => {
+            for(let l = 0; l < L_max; l++){
+                let pNextCap = ((2 * l + 1) * Math.cos(alpha) * pCurrCap - l * pPrevCap) / (l + 1);
+                let cap_factor = (pPrevCap - pNextCap); 
+
+                let term_const = J_0 / (sigma * l * (2*l + 1) * R**(l-1));
+
+                point.V += term_const * point.r ** l * cap_factor * (point.pCurrA - point.pCurrC);
+
+                // Set recursion to next value
+                pPrevCap = pCurrCap;
+                pCurrCap = pNextCap;
+
+                let pNextA = ((2 * l + 1) * point.cosGammaA * point.pCurrA - l * point.pPrevA) / (l + 1);
+                let pNextC = ((2 * l + 1) * point.cosGammaC * point.pCurrC - l * point.pPrevC) / (l + 1);
+
+                point.pPrevA = point.pCurrA;
+                point.pCurrA = pNextA;
+                point.pPrevC = point.pCurrC;
+                point.pCurrC = pNextC;
+
+            }
+        });
 
         const data: Data[] = [{
             type: 'surface',
-            x: x,
-            y: y,
-            z: z,
-            surfacecolor: v,
+            x: points.x,
+            y: points.y,
+            z: points.z,
+            surfacecolor: points.V,
 
             colorscale: 'Viridis',
             showscale: true,

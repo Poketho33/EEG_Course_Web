@@ -6,6 +6,8 @@ import type { Data } from 'plotly.js';
 import 'katex/dist/katex.min.css';
 import { BlockMath, InlineMath } from 'react-katex';
 
+import { linspace } from '@/lib/math/MathLibFunctions';
+
 import Derivation from "@/components/Derivation";
 import Slider from "@/components/Slider";
 
@@ -66,9 +68,6 @@ function createQuiverTraces(
         showlegend: false,
     } as Data;
 }
-
-const linspace = (start: number, stop: number, n: number) =>
-    Array.from({ length: n }, (_, i) => start + (i * (stop - start)) / (n - 1));
 
 // Parameters
 const R = 0.01, sigma = 0.33, I_tot = 1e-3, alpha = 0.2;
