@@ -112,41 +112,60 @@ export default function Plot_3D() {
 
                     const r = Math.sqrt(px**2 + py**2 + pz**2);
 
-                    x.push(px);
-                    y.push(py);
-                    z.push(pz);
-
-                    if(r > 0.1){
-                        v.push(-0.11); 
+                    if(r <= 0.1){
+                        x.push(px);
+                        y.push(py);
+                        z.push(pz);
+                        v.push(r);
                     }else{
-                        v.push(-0.06)
+                        x.push(px);
+                        y.push(py);
+                        z.push(pz);
+                        v.push(r);
                     }
                 }
             }
         }
 
+        // console.log(`X: ${x}, Y: ${y}, Z: ${z}`);
+        // console.log(`Potential (V): ${v}`);
+
         const data = [{
-            type: 'isosurface',
+            type: 'volume',
+
             x: x,
             y: y,
             z: z,
+
             value: v,
+            opacity: 0.25,
+            isomin: 0.001,
+            isomax: 0.1,
 
-            isomin: -0.1,  
-            isomax: 0.1,  
+            colorscale: 'Hot',
+            surface_count: 1,
 
-            surface: { count: 1 },
-            
-            flatshading: false,
-            lighting: {
-                ambient: 1,
-                // diffuse: 0,
-                // specular: 0,
-                // roughness: 0,
-                // fresnel: 0
+            caps: {
+                x: { show: true },
+                y: { show: true },
+                z: { show: true }
+            },
+            slices: {
+                z: {
+                    show: true,
+                    locations: [0]
+                },
+                y: {
+                    show: true,
+                    locations: [0]
+                },
+                x: {
+                    show: true,
+                    locations: [0]
+                }
             },
 
-            colorscale: 'Viridis',
+            showscale: true
         }];
 
         return data;

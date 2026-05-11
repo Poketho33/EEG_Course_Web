@@ -11,7 +11,7 @@ const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 export default function Plot_3D() {
     // Parameters
     const R = 0.1, sigma = 0.33, I_tot = 1e-3, alpha = 0.6;
-    const Ngrid = 50, L_max  = 25;
+    const Ngrid = 30, L_max  = 25;
     const J_0 = I_tot / (2 * Math.PI * R**2 * (1 - Math.cos(alpha)));
 
     // Electrode positions [theta, phi]
@@ -64,7 +64,7 @@ export default function Plot_3D() {
                             y: y,
                             z: z,
                             r: r,
-                            V: NaN,
+                            V: -2.01,
 
                             cosGammaA: 0,
                             cosGammaC: 0,
@@ -122,9 +122,9 @@ export default function Plot_3D() {
         const z = points.map(p => p.z);
         const v = points.map(p => p.V);
 
-        const i = 30;
-        const j = 30;
-        const k = 40;
+        const i = 20;
+        const j = 20;
+        const k = 20;
         const targetIndex = i * (Ngrid * Ngrid) + j * Ngrid + k;
         const p = points[targetIndex];
 
@@ -132,18 +132,19 @@ export default function Plot_3D() {
         console.log(`Potential (V): ${p.V}`);
 
         const data: Data[] = [{
-            type: 'isosurface',
+            type: 'volume',
             x: x,
             y: y,
             z: z,
-            value: v as any,
+            value: v,
 
-            isomin: v.reduce((a, b) => Math.min(a, b), Infinity),
-            isomax: v.reduce((a, b) => Math.max(a, b), -Infinity),
+            isomin: -2,
+            // isomax: v.reduce((a, b) => Math.max(a, b), -Infinity),
+            surface_count: 1,
             slices: {
-                x: { show: true, location: 0 },
-                y: { show: true, location: 0 },
-                z: { show: true, location: 0 }
+                x: { show: true, location: [0] },
+                y: { show: true, location: [0] },
+                z: { show: true, location: [0] }
             },
             colorscale: 'Viridis',
             showscale: true,
