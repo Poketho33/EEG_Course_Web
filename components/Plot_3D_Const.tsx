@@ -21,69 +21,72 @@ export default function Plot_3D() {
     // Grid (spherical coords)
     const xvec = linspace(-R, R, Ngrid);
 
-    const points = useMemo(() => {
-        const points = [];
+    // Arrays
+    const x: number[] = [];
+    const y: number[] = [];
+    const z: number[] = [];
 
-        for (let i = 0; i < Ngrid; i++) {
-            for (let j = 0; j < Ngrid; j++) {
-                for (let k = 0; k < Ngrid; k++) {
-                    const x = xvec[i];
-                    const y = xvec[j];
-                    const z = xvec[k];
-                    
-                    const r = Math.sqrt(x**2 + y**2 + z**2);
-                    
-                    // Mask
-                    if (r <= R) { 
-                        let theta = Math.acos(z / r);
-                        let phi = Math.atan2(y, x);
-                        let cosGammaA = Math.cos(theta) * Math.cos(posA[0]) + Math.sin(theta) * Math.sin(posA[0]) * Math.cos(phi - posA[1]);
-                        let cosGammaC = Math.cos(theta) * Math.cos(posC[0]) + Math.sin(theta) * Math.sin(posC[0]) * Math.cos(phi - posC[1]);
+    const r_grid: number[] = [];
+    // const theta_grid: number[] = [];
+    // const phi_grid: number[] = [];
+    
+    const v: number[] = [];
 
-                        points.push({
-                            x: x,
-                            y: y,
-                            z: z,
-                            r: r,
-                            theta: theta,
-                            phi: phi,
-                            V: 0,
-                            cosGammaA: cosGammaA,
-                            cosGammaC: cosGammaC,
+    const cosGammaA_grid: number[] = [];
+    const cosGammaC_grid: number[] = [];
 
-                            // Bonnet's recursion for the cosGamma legendre functions
-                            pPrevA: 1,
-                            pCurrA: cosGammaA,             
-                            pPrevC: 1,
-                            pCurrC: cosGammaC,
-                            isInSphere: true
-                        });
-                    }else{
-                        points.push({
-                            x: x,
-                            y: y,
-                            z: z,
-                            r: r,
-                            V: -2.01,
+    const pPrevA: number[] = [];
+    const pCurrA: number[] = [];
+    const pPrevC: number[] = [];
+    const pCurrC: number[] = [];
 
-                            cosGammaA: 0,
-                            cosGammaC: 0,
+    for (let i = 0; i < Ngrid; i++) {
+        for (let j = 0; j < Ngrid; j++) {
+            for (let k = 0; k < Ngrid; k++) {
+                x.push(xvec[i]);
+                y.push(xvec[j]);
+                z.push(xvec[k]);
+                
+                const r = Math.sqrt(xvec[i]**2 + xvec[j]**2 + xvec[k]**2);
+                r_grid.push(r);
 
-                            // Bonnet's recursion for the cosGamma legendre functions
-                            pPrevA: 1,
-                            pCurrA: 0,             
-                            pPrevC: 1,
-                            pCurrC: 0,
+                // Mask
+                if (r <= R) { 
+                    v.push(0);
 
-                            isInSphere: false
-                        });
-                    }
+                    let theta = Math.acos(xvec[k] / r);
+                    let phi = Math.atan2(xvec[j], xvec[i]);
+
+                    let cosGammaA = Math.cos(theta) * Math.cos(posA[0]) + Math.sin(theta) * Math.sin(posA[0]) * Math.cos(phi - posA[1]);
+                    let cosGammaC = Math.cos(theta) * Math.cos(posC[0]) + Math.sin(theta) * Math.sin(posC[0]) * Math.cos(phi - posC[1]);
+
+                    cosGammaA_grid.push(cosGammaA);
+                    cosGammaC_grid.push(cosGammaC);
+
+                    pPrevA.push(1);
+                    pCurrA.push(cosGammaA);
+                    pCurrC.push(1);
+                    pPrevC.push(cosGammaC);
+                }else{
+                    v.push(-2.1);
+
+                    let theta = Math.acos(xvec[k] / r);
+                    let phi = Math.atan2(xvec[j], xvec[i]);
+
+                    let cosGammaA = Math.cos(theta) * Math.cos(posA[0]) + Math.sin(theta) * Math.sin(posA[0]) * Math.cos(phi - posA[1]);
+                    let cosGammaC = Math.cos(theta) * Math.cos(posC[0]) + Math.sin(theta) * Math.sin(posC[0]) * Math.cos(phi - posC[1]);
+
+                    cosGammaA_grid.push(cosGammaA);
+                    cosGammaC_grid.push(cosGammaC);
+
+                    pPrevA.push(1);
+                    pCurrA.push(cosGammaA);
+                    pCurrC.push(1);
+                    pPrevC.push(cosGammaC);
                 }
             }
         }
-        return points;
-    }, [R, Ngrid]); // might need another useMemo for the recalculation of cosGammaA/C on posA/C change
-
+    }
 
 
     const plotData = useMemo(() => {
@@ -98,38 +101,32 @@ export default function Plot_3D() {
 
             let term_const = J_0 / (sigma * l * (2*l + 1) * R**(l-1));
 
-            points.forEach(point => {
-                if(point.isInSphere){
-                    point.V += term_const * point.r ** l * cap_factor * (point.pCurrA - point.pCurrC);
+            for(let i = 0; i < r_grid.length; i++){
+                if(r_grid[i] <= R){
+                    v[i] += term_const * r_grid[i] ** l * cap_factor * (pCurrA[i] - pCurrC[i])
+
+                    let pNextA = ((2 * l + 1) * cosGammaA_grid[i] * pCurrA[i] - l * pPrevA[i]) / (l + 1);
+                    let pNextC = ((2 * l + 1) * cosGammaC_grid[i] * pCurrC[i] - l * pPrevC[i]) / (l + 1);
     
-                    let pNextA = ((2 * l + 1) * point.cosGammaA * point.pCurrA - l * point.pPrevA) / (l + 1);
-                    let pNextC = ((2 * l + 1) * point.cosGammaC * point.pCurrC - l * point.pPrevC) / (l + 1);
-    
-                    point.pPrevA = point.pCurrA;
-                    point.pCurrA = pNextA;
-                    point.pPrevC = point.pCurrC;
-                    point.pCurrC = pNextC;
+                    pPrevA[i] = pCurrA[i];
+                    pCurrA[i] = pNextA;
+                    pPrevC[i] = pCurrC[i];
+                    pCurrC[i] = pNextC;
                 }
-            });
+            }
 
             // Set recursion to next value
             pPrevCap = pCurrCap;
             pCurrCap = pNextCap;
         }
 
-        const x = points.map(p => p.x);
-        const y = points.map(p => p.y);
-        const z = points.map(p => p.z);
-        const v = points.map(p => p.V);
-
         const i = 20;
         const j = 20;
         const k = 20;
         const targetIndex = i * (Ngrid * Ngrid) + j * Ngrid + k;
-        const p = points[targetIndex];
 
-        console.log(`X: ${p.x}, Y: ${p.y}, Z: ${p.z}`);
-        console.log(`Potential (V): ${p.V}`);
+        console.log(`X: ${x[targetIndex]}, Y: ${y[targetIndex]}, Z: ${z[targetIndex]}`);
+        console.log(`Potential (V): ${v[targetIndex]}`);
 
         const data: Data[] = [{
             type: 'volume',

@@ -9,162 +9,90 @@ import { linspace } from '@/lib/math/MathLibFunctions';
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
 export default function Plot_3D() {
-    // Parameters
-    // const R = 0.1;
-    // const Ngrid = 50;
-
-    // // Grid (spherical coords)
-    // const xvec = linspace(-R, R, Ngrid);
-
-    // const points = useMemo(() => {
-    //     const points = [];
-    //     for (let i = 0; i < Ngrid; i++) {
-    //         for (let j = 0; j < Ngrid; j++) {
-    //             for (let k = 0; k < Ngrid; k++) {
-    //                 const x = xvec[i];
-    //                 const y = xvec[j];
-    //                 const z = xvec[k];
-                    
-    //                 const r = Math.sqrt(x**2 + y**2 + z**2);
-                    
-    //                 // Mask
-    //                 if (r <= R) { 
-    //                     points.push({
-    //                         x: x,
-    //                         y: y,
-    //                         z: z,
-    //                         V: 1,
-    //                     });
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return points;
-    // }, [R, Ngrid]);
-
-
-
-    // const plotData = useMemo(() => {
-    //     const size = 50;
-    //     const x: number[][] = [];
-    //     const y: number[][] = [];
-    //     const z: number[][] = [];
-    //     const v: number[][] = [];
-
-    //     for (let i = 0; i <= size; i++) {
-    //         const theta = (i / size) * Math.PI;
-    //         const xRow: number[] = [];
-    //         const yRow: number[] = [];
-    //         const zRow: number[] = [];
-    //         const vRow: number[] = [];
-
-    //         for (let j = 0; j <= size; j++) {
-    //             const phi = (j / size) * 2 * Math.PI;
-    //             const xVal = Math.sin(theta) * Math.cos(phi);
-    //             const yVal = Math.sin(theta) * Math.sin(phi);
-    //             const zVal = Math.cos(theta);
-
-    //             xRow.push(xVal);
-    //             yRow.push(yVal);
-    //             zRow.push(zVal);
-    //             vRow.push(yVal *  Math.sin(phi)); 
-    //         }
-
-    //         x.push(xRow);
-    //         y.push(yRow);
-    //         z.push(zRow);
-    //         v.push(vRow);
-    //     }
-        
-    //     const data: Data[] = [{
-    //         type: 'surface',
-    //         x: x,
-    //         y: y,
-    //         z: z,
-    //         surfacecolor: v,
-
-    //         colorscale: 'Viridis',
-    //         showscale: true,
-    //         colorbar: {
-    //             thickness: 15,
-    //             len: 0.5
-    //         }
-    //     }];
-
-    //     return data;
-    // }, []);
-
     const plotData = useMemo(() => {
-        const size = 30;
-        const xvec = linspace(-0.1, 0.1, size);
-        
-        const x: number[] = [];
-        const y: number[] = [];
-        const z: number[] = [];
-        const v: number[] = [];
+        // Parameters
+        const R = 0.1, sigma = 0.33, I_tot = 1e-3, alpha = 0.0002;
+        const posA = [0, 0]; const posC = [Math.PI, 0]; // [Theta, Phi]
+        const J_0 = I_tot / (2 * Math.PI * R**2 * (1 - Math.cos(alpha)));
+        // Resolution
+        const Ngrid = 50, L_max  = 25;
 
-        for (let i = 0; i < size; i++) {
-            for (let j = 0; j < size; j++) {
-                for (let k = 0; k < size; k++) {
-                    const px = xvec[i];
-                    const py = xvec[j];
-                    const pz = xvec[k];
+        // Grid (spherical coords)
+        const xvec = linspace(-R, R, Ngrid);
+        const x: number[] = [], y: number[] = [], z: number[] = [], v: number[] = [], rec = [];
 
-                    const r = Math.sqrt(px**2 + py**2 + pz**2);
+        for (let i = 0; i < Ngrid; i++) {
+            for (let j = 0; j < Ngrid; j++) {
+                const px = xvec[i];
+                const py = xvec[j];
+                const pz = 0;
 
-                    if(r <= 0.1){
-                        x.push(px);
-                        y.push(py);
-                        z.push(pz);
-                        v.push(r);
-                    }else{
-                        x.push(px);
-                        y.push(py);
-                        z.push(pz);
-                        v.push(r);
-                    }
+                const r = Math.sqrt(px**2 + py**2);
+
+                if(r <= R){
+                    x.push(px);
+                    y.push(py);
+                    z.push(pz);
+                    v.push(0);
+
+                    // rec
+                    let theta = Math.acos(pz / r);
+                    let phi = Math.atan2(py, px);
+
+                    let cosGammaA = Math.cos(theta) * Math.cos(posA[0]) + Math.sin(theta) * Math.sin(posA[0]) * Math.cos(phi - posA[1]);
+                    let cosGammaC = Math.cos(theta) * Math.cos(posC[0]) + Math.sin(theta) * Math.sin(posC[0]) * Math.cos(phi - posC[1]);
+
+                    rec.push({
+                        cosGammaA: cosGammaA,
+                        cosGammaC: cosGammaC,
+                        pPrevA: 1,
+                        pCurrA: cosGammaA,
+                        pCurrC: 1,
+                        pPrevC: cosGammaC
+                    });
                 }
             }
         }
 
-        // console.log(`X: ${x}, Y: ${y}, Z: ${z}`);
-        // console.log(`Potential (V): ${v}`);
+        // Bonnet's recursion
+        let pPrevCap = 1;
+        let pCurrCap = Math.cos(alpha);
+        
+        // Solver loop
+        for(let l = 1; l < L_max; l++){
+            let pNextCap = ((2 * l + 1) * Math.cos(alpha) * pCurrCap - l * pPrevCap) / (l + 1);
+            let cap_factor = (pPrevCap - pNextCap); 
+
+            let term_const = J_0 / (sigma * l * (2*l + 1) * R**(l-1));
+
+            for(let i = 0; i < x.length; i++){
+                const r = Math.sqrt(x[i]**2 + y[i]**2);
+                if(r <= R){
+                    v[i] += term_const * r ** l * cap_factor * (rec[i].pCurrA - rec[i].pCurrC)
+
+                    let pNextA = ((2 * l + 1) * rec[i].cosGammaA * rec[i].pCurrA - l * rec[i].pPrevA) / (l + 1);
+                    let pNextC = ((2 * l + 1) * rec[i].cosGammaC * rec[i].pCurrC - l * rec[i].pPrevC) / (l + 1);
+    
+                    rec[i].pPrevA = rec[i].pCurrA;
+                    rec[i].pCurrA = pNextA;
+                    rec[i].pPrevC = rec[i].pCurrC;
+                    rec[i].pCurrC = pNextC;
+                }
+            }
+
+            // Set recursion to next value
+            pPrevCap = pCurrCap;
+            pCurrCap = pNextCap;
+        }
+
 
         const data = [{
-            type: 'volume',
+            type: 'surface',
+            x, y, z,
 
-            x: x,
-            y: y,
-            z: z,
-
-            value: v,
-            opacity: 0.25,
-            isomin: 0.001,
-            isomax: 0.1,
+            surfacecolor: v,
 
             colorscale: 'Hot',
-            surface_count: 1,
-
-            caps: {
-                x: { show: true },
-                y: { show: true },
-                z: { show: true }
-            },
-            slices: {
-                z: {
-                    show: true,
-                    locations: [0]
-                },
-                y: {
-                    show: true,
-                    locations: [0]
-                },
-                x: {
-                    show: true,
-                    locations: [0]
-                }
-            },
-
             showscale: true
         }];
 
