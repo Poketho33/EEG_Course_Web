@@ -12,28 +12,34 @@ export default function Plot_3D() {
     const plotData = useMemo(() => {
         // Parameters
         const R = 0.1, sigma = 0.33, I_tot = 1e-3, alpha = 0.0002;
-        const posA = [0, 0]; const posC = [Math.PI, 0]; // [Theta, Phi]
+        const posA = [Math.PI/2, 0]; const posC = [Math.PI, 0]; // [Theta, Phi]
         const J_0 = I_tot / (2 * Math.PI * R**2 * (1 - Math.cos(alpha)));
         // Resolution
-        const Ngrid = 50, L_max  = 25;
+        const Ngrid = 100, L_max  = 25;
 
         // Grid (spherical coords)
         const xvec = linspace(-R, R, Ngrid);
-        const x: number[] = [], y: number[] = [], z: number[] = [], v: number[] = [], rec = [];
+        const x = [], y = [], z = [], v = [], rec = [];
 
         for (let i = 0; i < Ngrid; i++) {
+            const xRow = [];
+            const yRow = [];
+            const zRow = [];
+            const vRow = [];
+            const recRow = [];
+
             for (let j = 0; j < Ngrid; j++) {
                 const px = xvec[i];
-                const py = xvec[j];
-                const pz = 0;
+                const py = 0;
+                const pz = xvec[j];
 
-                const r = Math.sqrt(px**2 + py**2);
+                const r = Math.sqrt(px**2 + py**2 + pz**2) || 1e-10;
 
                 if(r <= R){
-                    x.push(px);
-                    y.push(py);
-                    z.push(pz);
-                    v.push(0);
+                    xRow.push(px);
+                    yRow.push(py);
+                    zRow.push(pz);
+                    vRow.push(0);
 
                     // rec
                     let theta = Math.acos(pz / r);
@@ -42,7 +48,7 @@ export default function Plot_3D() {
                     let cosGammaA = Math.cos(theta) * Math.cos(posA[0]) + Math.sin(theta) * Math.sin(posA[0]) * Math.cos(phi - posA[1]);
                     let cosGammaC = Math.cos(theta) * Math.cos(posC[0]) + Math.sin(theta) * Math.sin(posC[0]) * Math.cos(phi - posC[1]);
 
-                    rec.push({
+                    recRow.push({
                         cosGammaA: cosGammaA,
                         cosGammaC: cosGammaC,
                         pPrevA: 1,
@@ -50,8 +56,27 @@ export default function Plot_3D() {
                         pCurrC: 1,
                         pPrevC: cosGammaC
                     });
+                }else{
+                    xRow.push(px);
+                    yRow.push(py);
+                    zRow.push(pz);
+                    vRow.push(NaN);
+
+                    recRow.push({
+                        cosGammaA: 0,
+                        cosGammaC: 0,
+                        pPrevA: 0,
+                        pCurrA: 0,
+                        pCurrC: 0,
+                        pPrevC: 0
+                    });
                 }
             }
+            x.push(xRow);
+            y.push(yRow);
+            z.push(zRow);
+            v.push(vRow);
+            rec.push(recRow);
         }
 
         // Bonnet's recursion
@@ -66,17 +91,19 @@ export default function Plot_3D() {
             let term_const = J_0 / (sigma * l * (2*l + 1) * R**(l-1));
 
             for(let i = 0; i < x.length; i++){
-                const r = Math.sqrt(x[i]**2 + y[i]**2);
-                if(r <= R){
-                    v[i] += term_const * r ** l * cap_factor * (rec[i].pCurrA - rec[i].pCurrC)
-
-                    let pNextA = ((2 * l + 1) * rec[i].cosGammaA * rec[i].pCurrA - l * rec[i].pPrevA) / (l + 1);
-                    let pNextC = ((2 * l + 1) * rec[i].cosGammaC * rec[i].pCurrC - l * rec[i].pPrevC) / (l + 1);
+                for(let j = 0; j < x[0].length; j++){
+                    const r = Math.sqrt(x[i][j]**2 + y[i][j]**2 + z[i][j]**2);
+                    if(r <= R){
+                        v[i][j] += term_const * r ** l * cap_factor * (rec[i][j].pCurrA - rec[i][j].pCurrC)
     
-                    rec[i].pPrevA = rec[i].pCurrA;
-                    rec[i].pCurrA = pNextA;
-                    rec[i].pPrevC = rec[i].pCurrC;
-                    rec[i].pCurrC = pNextC;
+                        let pNextA = ((2 * l + 1) * rec[i][j].cosGammaA * rec[i][j].pCurrA - l * rec[i][j].pPrevA) / (l + 1);
+                        let pNextC = ((2 * l + 1) * rec[i][j].cosGammaC * rec[i][j].pCurrC - l * rec[i][j].pPrevC) / (l + 1);
+        
+                        rec[i][j].pPrevA = rec[i][j].pCurrA;
+                        rec[i][j].pCurrA = pNextA;
+                        rec[i][j].pPrevC = rec[i][j].pCurrC;
+                        rec[i][j].pCurrC = pNextC;
+                    }
                 }
             }
 
@@ -92,7 +119,7 @@ export default function Plot_3D() {
 
             surfacecolor: v,
 
-            colorscale: 'Hot',
+            colorscale: [[0, '#000000'], [0.365, '#ff0000'], [0.746, '#ffff00'], [1, '#ffffff']],
             showscale: true
         }];
 
