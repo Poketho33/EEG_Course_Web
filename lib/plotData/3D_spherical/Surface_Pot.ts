@@ -1,19 +1,13 @@
 'use client';
 
 import { useMemo } from 'react';
-import dynamic from 'next/dynamic';
-import type { Data, Layout } from 'plotly.js';
+import type { Data } from 'plotly.js';
 
-const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
+import type { parameters } from '@/app/courses/tdcs/theory/2/clientSide';
 
-export default function Plot_3D_Surface() {
-    // Parameters
-    const R = 0.1, sigma = 0.33, I_tot = 1e-3, alpha = 0.0002;
-    const posA = [0, 0]; const posC = [Math.PI, 0];
-    const J_0 = I_tot / (2 * Math.PI * R**2 * (1 - Math.cos(alpha)));
+export default function Plot_3D_Surface({params, J_0} : {params: parameters, J_0: number}) {
     // Resolution
     const nTheta = 50, nPhi = 100, L_max  = 50;
-
 
     const plotData = useMemo(() => {    
         // Arrays
@@ -27,14 +21,14 @@ export default function Plot_3D_Surface() {
             for (let j = 0; j < nPhi; j++) {
                 const phi = (j / (nPhi - 1)) * 2 * Math.PI;
 
-                xRow.push(R * Math.sin(theta) * Math.cos(phi));
-                yRow.push(R * Math.sin(theta) * Math.sin(phi));
-                zRow.push(R * Math.cos(theta));
+                xRow.push(params.R * Math.sin(theta) * Math.cos(phi));
+                yRow.push(params.R * Math.sin(theta) * Math.sin(phi));
+                zRow.push(params.R * Math.cos(theta));
 
-                const cosGammaA = Math.cos(theta) * Math.cos(posA[0]) + 
-                                Math.sin(theta) * Math.sin(posA[0]) * Math.cos(phi - posA[1]);
-                const cosGammaC = Math.cos(theta) * Math.cos(posC[0]) + 
-                                Math.sin(theta) * Math.sin(posC[0]) * Math.cos(phi - posC[1]);
+                const cosGammaA = Math.cos(theta) * Math.cos(params.posA[0]) + 
+                                Math.sin(theta) * Math.sin(params.posA[0]) * Math.cos(phi - params.posA[1]);
+                const cosGammaC = Math.cos(theta) * Math.cos(params.posC[0]) + 
+                                Math.sin(theta) * Math.sin(params.posC[0]) * Math.cos(phi - params.posC[1]);
                 
                 // Bonnet's recursion
                 vRow.push(0);
@@ -49,19 +43,19 @@ export default function Plot_3D_Surface() {
 
         // Loop solver
         let pPrevCap = 1;
-        let pCurrCap = Math.cos(alpha);
+        let pCurrCap = Math.cos(params.alpha);
 
         for (let l = 1; l <= L_max; l++) {
-            const pNextCap = ((2 * l + 1) * Math.cos(alpha) * pCurrCap - l * pPrevCap) / (l + 1);
+            const pNextCap = ((2 * l + 1) * Math.cos(params.alpha) * pCurrCap - l * pPrevCap) / (l + 1);
             const capFactor = pPrevCap - pNextCap;
-            const termConst = J_0 / (sigma * l * (2 * l + 1) * (R ** (l - 1)));
+            const termConst = J_0 / (params.sigma * l * (2 * l + 1) * (params.R ** (l - 1)));
 
             for (let i = 0; i < nTheta; i++) {
                 for (let j = 0; j < nPhi; j++) {
                     const cell = rec[i][j];
                     
                     // At r = R, so no inside points are calculated
-                    v[i][j] += termConst * (R ** l) * capFactor * (cell.pCurrA - cell.pCurrC);
+                    v[i][j] += termConst * (params.R ** l) * capFactor * (cell.pCurrA - cell.pCurrC);
 
                     const pNextA = ((2 * l + 1) * cell.cosGammaA * cell.pCurrA - l * cell.pPrevA) / (l + 1);
                     const pNextC = ((2 * l + 1) * cell.cosGammaC * cell.pCurrC - l * cell.pPrevC) / (l + 1);
@@ -82,28 +76,7 @@ export default function Plot_3D_Surface() {
         }];
 
         return data;
-    }, [R, alpha, posA, posC]);
+    }, [params.R, params.alpha, params.posA, params.posC]);
 
-    const layout: Partial<Layout> = {
-        width: 600,
-        height: 600,
-        paper_bgcolor: 'transparent',
-        font: {
-            color: '#ffffff'
-        },
-        title: {
-            text: 'Potential Field at the Surface (V)'
-        },
-        margin: { t: 40, b: 0, l: 0, r: 0 },
-    };
-
-    return (
-        <div className="flex flex-col items-center justify-center">
-            <Plot
-                data={plotData}
-                layout={layout}
-                config={{ responsive: true }}
-            />
-        </div>
-    );
+    return plotData;
 }
