@@ -1,8 +1,11 @@
-import Header from "../components/Header";
+import 'server-only'
+
+import Header from "@/components/Header";
+import { randomPastelColor } from '@/lib/UI/RandomColor';
 
 import type { Metadata } from "next";
-import "./globals.css";
 import type { ReactNode } from 'react';
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -11,8 +14,17 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
 
+  console.log(randomPastelColor());
+  
   return (
-    <html lang="en">
+    <html lang="en" style={
+      { 
+        '--pastel-1': randomPastelColor(),
+        '--pastel-2': randomPastelColor(),
+        '--pastel-3': randomPastelColor(),
+        '--pastel-4': randomPastelColor(),
+        '--pastel-5': randomPastelColor() 
+      } as React.CSSProperties }>
       <body>
           <div className="min-h-screen flex">
             <Header />

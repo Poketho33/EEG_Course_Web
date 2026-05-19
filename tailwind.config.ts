@@ -9,12 +9,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        // from globals css
         background: "var(--background)",
         foreground: "var(--foreground)",
-        secondary: "var(--secondary)",
         lighter: "var(--lighter)",
         lighter2: "var(--lighter2)",
+        lighter_3: "var(--lighter-3)",
+        
+        pastel_1: "var(--pastel-1)",
+        pastel_2: "var(--pastel-2)",
+        pastel_3: "var(--pastel-3)",
+        pastel_4: "var(--pastel-4)",
+        pastel_5: "var(--pastel-5)",
       },
     },
   },

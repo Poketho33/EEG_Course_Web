@@ -1,23 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import { randomPastelColor } from '@/lib/UI/RandomColor';
+import { useState } from 'react';
 
 export default function Derivation({ children }: { children: React.ReactNode }) {
-    const [color, setColor] = useState('#e0e0e0');
-
-    useEffect(() => {
-        setColor(randomPastelColor());
-    }, []);
-
     const [open, setOpen] = useState(false);
 
     return (
         <div className="p-4 bg-lighter rounded-md relative">
             <p className="pb-1 font-bold">Explanation</p>
-            <button
-                style={{ backgroundColor: color }}    
-                className="w-6 h-6 bg-secondary rounded-full absolute right-4 top-4 fill-background cursor-pointer flex items-center justify-center"
+            <button    
+                className="bg-pastel_3 w-6 h-6 bg-secondary rounded-full absolute right-4 top-4 fill-background cursor-pointer flex items-center justify-center"
                 onClick={() => setOpen(prev => !prev)}
             >
                 <svg
