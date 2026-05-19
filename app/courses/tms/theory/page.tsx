@@ -1,6 +1,6 @@
 import 'server-only'
 
-import Plot_2D_Const from "@/components/Plot_2D_Const";
+import Plot_2D_Const from "@/lib/plotData/2D_Circular/Plot_2D_Const";
 
 export default async function TMS_Theory() {
   return (

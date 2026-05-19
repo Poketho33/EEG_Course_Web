@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { Data } from 'plotly.js';
+import type { ExtendedData } from '../type';
+
 
 import { linspace } from '@/lib/math/MathLibFunctions';
 
@@ -10,7 +11,7 @@ import type { parameters } from '@/app/courses/tdcs/theory/2/clientSide';
 export default function Plot_3D({params, J_0} : {params: parameters, J_0: number}) {
     const plotData = useMemo(() => {
         // Resolution
-        const Ngrid = 100, L_max  = 25;
+        const Ngrid = 100, L_max  = 50;
 
         // Grid (spherical coords)
         const xvec = linspace(-params.R, params.R, Ngrid);
@@ -140,15 +141,14 @@ export default function Plot_3D({params, J_0} : {params: parameters, J_0: number
         const sharedSurface = {
             type: 'surface' as const,
             colorscale: [[0, '#000000'], [0.365, '#ff0000'], [0.746, '#ffff00'], [1, '#ffffff']] as [number, string][],
-            showscale: false,
             // Shared colorbar
             cauto: false,
             cmin: minV,
             cmax: maxV,
         };
 
-        const data: Data[] = [
-            { ...sharedSurface, x: sliceYZ.x, y: sliceYZ.y, z: sliceYZ.z, surfacecolor: sliceYZ.v, showscale: true },
+        const data: ExtendedData[] = [
+            { ...sharedSurface, x: sliceYZ.x, y: sliceYZ.y, z: sliceYZ.z, surfacecolor: sliceYZ.v },
             { ...sharedSurface, x: sliceXZ.x, y: sliceXZ.y, z: sliceXZ.z, surfacecolor: sliceXZ.v },
             { ...sharedSurface, x: sliceXY.x, y: sliceXY.y, z: sliceXY.z, surfacecolor: sliceXY.v }
         ];

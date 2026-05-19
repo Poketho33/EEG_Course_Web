@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { Data } from 'plotly.js';
+import type { ExtendedData } from '../type';
 
 import type { parameters } from '@/app/courses/tdcs/theory/2/clientSide';
 
@@ -66,13 +66,13 @@ export default function Plot_3D_Surface({params, J_0} : {params: parameters, J_0
             pPrevCap = pCurrCap; pCurrCap = pNextCap;
         }
 
-        const data: Data[] = [{
-            type: 'surface',
+        const data: ExtendedData[] = [{
+            type: 'surface' as const,
             x: x,
             y: y,
             z: z,
             surfacecolor: v,
-            colorscale: 'Viridis',
+            colorscale: [[0, '#000000'], [0.365, '#ff0000'], [0.746, '#ffff00'], [1, '#ffffff']] as [number, string][],
         }];
 
         return data;

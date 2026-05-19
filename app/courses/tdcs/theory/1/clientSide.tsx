@@ -4,7 +4,7 @@ import 'katex/dist/katex.min.css';
 import { BlockMath, InlineMath } from 'react-katex';
 
 import Derivation from "@/components/Derivation";
-import Plot_2D_Const from "@/components/Plot_2D_Const";
+import Plot_2D_Const from "@/lib/plotData/2D_Circular/Plot_2D_Const";
 
 export default function ClientSide() {
     return (
