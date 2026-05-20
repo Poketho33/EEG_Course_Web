@@ -11,12 +11,12 @@ export default function Plot_3D_Surface({params, J_0} : {params: parameters, J_0
 
     const plotData = useMemo(() => {    
         // Arrays
-        const x = [], y = [], z = [], v = [], rec = [];
+        const x: number[][] = [], y: number[][] = [], z: number[][] = [], v: number[][] = [], rec: any[][] = [], E: number[][] = [];
 
         // Generate grid
         for (let i = 0; i < nTheta; i++) {
             const theta = (i / (nTheta - 1)) * Math.PI;
-            const xRow = [], yRow = [], zRow = [], vRow = [], recRow = [];
+            const xRow: number[] = [], yRow: number[] = [], zRow: number[] = [], vRow: number[] = [], recRow: any[] = [], ERow: number[] = [];
 
             for (let j = 0; j < nPhi; j++) {
                 const phi = (j / (nPhi - 1)) * 2 * Math.PI;
@@ -32,13 +32,14 @@ export default function Plot_3D_Surface({params, J_0} : {params: parameters, J_0
                 
                 // Bonnet's recursion
                 vRow.push(0);
+                ERow.push(0);
                 recRow.push({
                     cosGammaA, cosGammaC,
                     pPrevA: 1, pCurrA: cosGammaA,
                     pPrevC: 1, pCurrC: cosGammaC
                 })
             }
-            x.push(xRow); y.push(yRow); z.push(zRow); v.push(vRow); rec.push(recRow);
+            x.push(xRow); y.push(yRow); z.push(zRow); v.push(vRow); rec.push(recRow); E.push(ERow);
         }
 
         // Loop solver
@@ -49,6 +50,7 @@ export default function Plot_3D_Surface({params, J_0} : {params: parameters, J_0
             const pNextCap = ((2 * l + 1) * Math.cos(params.alpha) * pCurrCap - l * pPrevCap) / (l + 1);
             const capFactor = pPrevCap - pNextCap;
             const termConst = J_0 / (params.sigma * l * (2 * l + 1) * (params.R ** (l - 1)));
+            const EtermConst = J_0 / (params.sigma * (2 * l + 1));
 
             for (let i = 0; i < nTheta; i++) {
                 for (let j = 0; j < nPhi; j++) {
@@ -56,6 +58,7 @@ export default function Plot_3D_Surface({params, J_0} : {params: parameters, J_0
                     
                     // At r = R, so no inside points are calculated
                     v[i][j] += termConst * (params.R ** l) * capFactor * (cell.pCurrA - cell.pCurrC);
+                    E[i][j] += EtermConst * capFactor * (cell.pCurrA - cell.pCurrC);
 
                     const pNextA = ((2 * l + 1) * cell.cosGammaA * cell.pCurrA - l * cell.pPrevA) / (l + 1);
                     const pNextC = ((2 * l + 1) * cell.cosGammaC * cell.pCurrC - l * cell.pPrevC) / (l + 1);
@@ -66,12 +69,39 @@ export default function Plot_3D_Surface({params, J_0} : {params: parameters, J_0
             pPrevCap = pCurrCap; pCurrCap = pNextCap;
         }
 
+        const deltaTheta = Math.PI / (nTheta - 1);
+        const deltaPhi = (2 * Math.PI) / (nPhi - 1);
+
+        for (let i = 0; i < nTheta; i++) {
+            const theta = (i / (nTheta - 1)) * Math.PI;
+            const sinTheta = Math.sin(theta);
+
+            // Out of bounds
+            let index_imo = i === 0 ? 0 : i - 1;
+            let index_ipo = i === nTheta - 1 ? nTheta - 1 : i + 1;
+            let thetaFactor = i === 0 || i === nTheta - 1 ? 1 : 2;
+
+            for (let j = 0; j < nPhi; j++) {
+                let index_jmo = j === 0 ? nPhi - 1 : j - 1;
+                let index_jpo = j === nPhi - 1 ? 0 : j + 1;
+
+                let Etheta = -1 / params.R * (v[index_ipo][j] - v[index_imo][j]) / (thetaFactor * deltaTheta); 
+                
+                let Ephi = 0;
+                if (sinTheta > 1e-5) {
+                    Ephi = -1 / (params.R * sinTheta) * (v[i][index_jpo] - v[i][index_jmo]) / (2 * deltaPhi); 
+                }
+                
+                E[i][j] = Math.sqrt(E[i][j] ** 2 + Etheta ** 2 + Ephi ** 2);
+            }
+        }
+
         const data: ExtendedData[] = [{
             type: 'surface' as const,
             x: x,
             y: y,
             z: z,
-            surfacecolor: v,
+            surfacecolor: E,
             colorscale: [[0, '#000000'], [0.365, '#ff0000'], [0.746, '#ffff00'], [1, '#ffffff']] as [number, string][],
         }];
 

@@ -17,14 +17,10 @@ export default function Plot_3D({params, J_0} : {params: parameters, J_0: number
         const xvec = linspace(-params.R, params.R, Ngrid);
         
         const createSlice = (plane: 'yz' | 'xz' | 'xy') => {
-            const x: number[][] = [], y: number[][] = [], z: number[][] = [], v: number[][] = [], rec: any[][] = [];
+            const x: number[][] = [], y: number[][] = [], z: number[][] = [], v: number[][] = [], rec: any[][] = [], E: number[][] = [];
 
             for (let i = 0; i < Ngrid; i++) {
-                const xRow: number[] = [];
-                const yRow: number[] = [];
-                const zRow: number[] = [];
-                const vRow: number[] = [];
-                const recRow: any[] = [];
+                const xRow: number[] = [], yRow: number[] = [], zRow: number[] = [], vRow: number[] = [], recRow: any[] = [], ERow: number[] = [];
     
                 for (let j = 0; j < Ngrid; j++) {
                     let px = 0, py = 0, pz = 0;
@@ -39,6 +35,7 @@ export default function Plot_3D({params, J_0} : {params: parameters, J_0: number
                         yRow.push(py);
                         zRow.push(pz);
                         vRow.push(0);
+                        ERow.push(0);
     
                         // rec
                         let theta = Math.acos(pz / r);
@@ -60,6 +57,7 @@ export default function Plot_3D({params, J_0} : {params: parameters, J_0: number
                         yRow.push(py);
                         zRow.push(pz);
                         vRow.push(NaN);
+                        ERow.push(NaN);
     
                         recRow.push({
                             cosGammaA: 0,
@@ -75,9 +73,10 @@ export default function Plot_3D({params, J_0} : {params: parameters, J_0: number
                 y.push(yRow);
                 z.push(zRow);
                 v.push(vRow);
+                E.push(ERow);
                 rec.push(recRow);
             }
-            return { x, y, z, v, rec };
+            return { x, y, z, v, E, rec };
         };
 
         // Create grids of slices
@@ -93,10 +92,11 @@ export default function Plot_3D({params, J_0} : {params: parameters, J_0: number
         
         // Solver loop
         for(let l = 1; l < L_max; l++){
-            let pNextCap = ((2 * l + 1) * Math.cos(params.alpha) * pCurrCap - l * pPrevCap) / (l + 1);
-            let cap_factor = (pPrevCap - pNextCap); 
+            const pNextCap = ((2 * l + 1) * Math.cos(params.alpha) * pCurrCap - l * pPrevCap) / (l + 1);
+            const cap_factor = (pPrevCap - pNextCap); 
 
-            let term_const = J_0 / (params.sigma * l * (2*l + 1) * params.R**(l-1));
+            const term_const = J_0 / (params.sigma * l * (2*l + 1) * params.R**(l-1));
+            const E_radial_term = J_0 / (params.sigma * (2 * l + 1) * params.R ** (l - 1));
 
             allSlices.forEach(slice => {
                 for (let i = 0; i < Ngrid; i++) {
@@ -104,6 +104,8 @@ export default function Plot_3D({params, J_0} : {params: parameters, J_0: number
                         const r = Math.sqrt(slice.x[i][j] ** 2 + slice.y[i][j] ** 2 + slice.z[i][j] ** 2);
                         if (r <= params.R) {
                             slice.v[i][j] += term_const * r ** l * cap_factor * (slice.rec[i][j].pCurrA - slice.rec[i][j].pCurrC);
+                            
+                            slice.E[i][j] += E_radial_term * r ** (l - 1) * cap_factor * (slice.rec[i][j].pCurrA - slice.rec[i][j].pCurrC);
 
                             let pNextA = ((2 * l + 1) * slice.rec[i][j].cosGammaA * slice.rec[i][j].pCurrA - l * slice.rec[i][j].pPrevA) / (l + 1);
                             let pNextC = ((2 * l + 1) * slice.rec[i][j].cosGammaC * slice.rec[i][j].pCurrC - l * slice.rec[i][j].pPrevC) / (l + 1);
@@ -124,15 +126,46 @@ export default function Plot_3D({params, J_0} : {params: parameters, J_0: number
 
         let minV = Infinity;
         let maxV = -Infinity;
+        let minE = Infinity;
+        let maxE = -Infinity;
+
+        const dx = xvec[1] - xvec[0]; // Grid spacing size delta
 
         allSlices.forEach(slice => {
             for (let i = 0; i < Ngrid; i++) {
                 for (let j = 0; j < Ngrid; j++) {
-                    const val = slice.v[i][j];
-                    if (!isNaN(val)) {
-                        if (val < minV) minV = val;
-                        if (val > maxV) maxV = val;
+                    if (isNaN(slice.v[i][j])) continue;
+
+                    let dV_dRow = 0;
+                    if (i === 0 || isNaN(slice.v[i - 1][j])) {
+                        dV_dRow = (slice.v[i + 1][j] - slice.v[i][j]) / dx; // Forward
+                    } else if (i === Ngrid - 1 || isNaN(slice.v[i + 1][j])) {
+                        dV_dRow = (slice.v[i][j] - slice.v[i - 1][j]) / dx; // Backward
+                    } else {
+                        dV_dRow = (slice.v[i + 1][j] - slice.v[i - 1][j]) / (2 * dx); // Central
                     }
+
+                    let dV_dCol = 0;
+                    if (j === 0 || isNaN(slice.v[i][j - 1])) {
+                        dV_dCol = (slice.v[i][j + 1] - slice.v[i][j]) / dx; // Forward
+                    } else if (j === Ngrid - 1 || isNaN(slice.v[i][j + 1])) {
+                        dV_dCol = (slice.v[i][j] - slice.v[i][j - 1]) / dx; // Backward
+                    } else {
+                        dV_dCol = (slice.v[i][j + 1] - slice.v[i][j - 1]) / (2 * dx); // Central
+                    }
+
+                    // Map gradients back into physical spatial components
+                    const E_row = -dV_dRow;
+                    const E_col = -dV_dCol;
+
+                    // Combine the analytical out-of-plane radial component with local tangential components
+                    const E_radial = slice.E[i][j];
+                    slice.E[i][j] = Math.sqrt(E_radial ** 2 + E_row ** 2 + E_col ** 2);
+
+                    if (slice.v[i][j] < minV) minV = slice.v[i][j];
+                    if (slice.v[i][j] > maxV) maxV = slice.v[i][j];
+                    if (slice.E[i][j] < minE) minE = slice.E[i][j];
+                    if (slice.E[i][j] > maxE) maxE = slice.E[i][j];
                 }
             }
         });
@@ -143,14 +176,14 @@ export default function Plot_3D({params, J_0} : {params: parameters, J_0: number
             colorscale: [[0, '#000000'], [0.365, '#ff0000'], [0.746, '#ffff00'], [1, '#ffffff']] as [number, string][],
             // Shared colorbar
             cauto: false,
-            cmin: minV,
-            cmax: maxV,
+            cmin: minE,
+            cmax: maxE,
         };
 
         const data: ExtendedData[] = [
-            { ...sharedSurface, x: sliceYZ.x, y: sliceYZ.y, z: sliceYZ.z, surfacecolor: sliceYZ.v },
-            { ...sharedSurface, x: sliceXZ.x, y: sliceXZ.y, z: sliceXZ.z, surfacecolor: sliceXZ.v },
-            { ...sharedSurface, x: sliceXY.x, y: sliceXY.y, z: sliceXY.z, surfacecolor: sliceXY.v }
+            { ...sharedSurface, x: sliceYZ.x, y: sliceYZ.y, z: sliceYZ.z, surfacecolor: sliceYZ.E },
+            { ...sharedSurface, x: sliceXZ.x, y: sliceXZ.y, z: sliceXZ.z, surfacecolor: sliceXZ.E },
+            { ...sharedSurface, x: sliceXY.x, y: sliceXY.y, z: sliceXY.z, surfacecolor: sliceXY.E }
         ];
 
         return data;

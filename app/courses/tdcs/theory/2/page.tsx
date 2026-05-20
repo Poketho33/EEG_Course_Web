@@ -8,7 +8,7 @@ export default async function TMS_Theory() {
       <h1 className='text-2xl max-w-[500px] font-bold mb-8'>
         <span className='text-lg opacity-60'>tDCS - Theoretical Background: </span>
         <br />
-        Part 2 - 3D Homogeneous Spherical Medium
+        Part 2.1 - 3D Homogeneous Spherical Medium
       </h1>
       
       <ClientSide/>

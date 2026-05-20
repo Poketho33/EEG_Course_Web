@@ -38,7 +38,72 @@ export default function ClientSide() {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center">
+        <div className="space-y-6 relative">
+            <div className="space-y-6 max-w-[600px]">
+                <p>
+                    The physical principles for a spherical medium build upon the circular case. 
+                    The seperation of variables used to solve the Laplace PDE can be expanded to: <InlineMath math="V (r, \theta, \phi) = R(r) \Theta(\theta) \Phi(\phi)" />.
+                    Filling this in the Laplace PDE leads to:
+                </p>
+
+                <BlockMath math="
+                    \frac{1}{R} \frac{\partial}{\partial r} (r^2 \frac{\partial R}{\partial r})
+                    + \frac{1}{\sin(\theta) \Theta} \frac{\partial}{\partial \theta} (\sin(\theta) \frac{\partial \Theta}{\partial \theta})
+                    + \frac{1}{\sin^2(\theta) \Phi} \frac{\partial^2 \Phi}{\partial \phi^2}
+                    = 0
+                "/>
+
+                <p>
+                    Similar to the 2D case, this formula can be solved to receive seperate ODEs.
+                    First, the 
+                    <span className='font-bold'> radial </span> 
+                    ODE:
+                </p>
+
+                <BlockMath math="
+                    \frac{1}{R} \frac{\partial}{\partial r} (r^2 \frac{\partial R}{\partial r})
+                    = l(l+1)
+                "/>
+
+                <p>
+                    This is the Cauchy-Euler ODE, which has solutions:
+                </p>
+
+                <BlockMath math="
+                    R(r) = A r^l + B r^{-(l+1)}
+                "/>
+
+                <p>
+                    The previous PDE is thus simplified to:
+                </p>
+
+                <BlockMath math="
+                    \sin^2(\theta) l (l+1)
+                    + \frac{\sin(\theta)}{\Theta} \frac{\partial}{\partial \theta} (\sin(\theta) \frac{\partial \Theta}{\partial \theta})
+                    + \frac{1}{\Phi} \frac{\partial^2 \Phi}{\partial \phi^2}
+                    = 0
+                "/>
+
+                <p>
+                    The
+                    <span className='font-bold'> azimuthal </span>  
+                    ODE is:
+                </p>
+
+                <BlockMath math="
+                    \frac{1}{\Phi} \frac{\partial^2 \Phi}{\partial \phi^2}
+                    = - m^2
+                "/>
+
+                <p>
+                    Which has solutions:
+                </p>
+
+                <BlockMath math="
+                    \Phi(\phi) = C \cos(m \phi) + D \sin(m \phi)
+                "/>
+
+            </div>
             <Plot
                 data={SurfacePotPlot({params, J_0}) as Data[]}
                 layout={layout}
