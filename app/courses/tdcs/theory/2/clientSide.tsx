@@ -1,14 +1,16 @@
 'use client'
 
 import 'katex/dist/katex.min.css';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
 import type { Data, Layout } from 'plotly.js';
+import NiiVue from "@/lib/niivue";
 
 import Derivation from "@/components/Derivation";
 
 import SlicesPotPlot from "@/lib/plotData/3D_spherical/Slices_Pot";
 import SurfacePotPlot from "@/lib/plotData/3D_spherical/Surface_Pot";
+import ShellsPlot from "@/lib/plotData/3D_spherical/Shells";
 
 export type parameters = {
     R: number;
@@ -24,7 +26,7 @@ const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
 export default function ClientSide() {
     // Set init parameters
-    const params: parameters = {R: 0.1, sigma: 0.33, I_tot: 1e-3, alpha: 0.0002, posA: [Math.PI/2, 0], posC: [Math.PI, 0]};
+    const params: parameters = {R: 0.1, sigma: 0.33, I_tot: 1e-3, alpha: 0.02, posA: [Math.PI/2, 0], posC: [Math.PI, 0]};
     const J_0 = useMemo(() => { return params.I_tot / (2 * Math.PI * params.R**2 * (1 - Math.cos(params.alpha)))}, [params.I_tot, params.R, params.alpha]);
 
     // Shared layout
@@ -61,7 +63,7 @@ export default function ClientSide() {
                 </p>
 
                 <BlockMath math="
-                    \frac{1}{R} \frac{\partial}{\partial r} (r^2 \frac{\partial R}{\partial r})
+                    \frac{1}{R} \frac{d}{d r} (r^2 \frac{d R}{d r})
                     = l(l+1)
                 "/>
 
@@ -70,7 +72,7 @@ export default function ClientSide() {
                 </p>
 
                 <BlockMath math="
-                    R(r) = A r^l + B r^{-(l+1)}
+                    R(r) = A_l r^l + B_l r^{-(l+1)}
                 "/>
 
                 <p>
@@ -78,9 +80,9 @@ export default function ClientSide() {
                 </p>
 
                 <BlockMath math="
-                    \sin^2(\theta) l (l+1)
-                    + \frac{\sin(\theta)}{\Theta} \frac{\partial}{\partial \theta} (\sin(\theta) \frac{\partial \Theta}{\partial \theta})
-                    + \frac{1}{\Phi} \frac{\partial^2 \Phi}{\partial \phi^2}
+                    - \sin^2(\theta) l (l+1)
+                    + \frac{\sin(\theta)}{\Theta} \frac{d}{d \theta} (\sin(\theta) \frac{d \Theta}{d \theta})
+                    + \frac{1}{\Phi} \frac{d^2 \Phi}{d \phi^2}
                     = 0
                 "/>
 
@@ -91,7 +93,7 @@ export default function ClientSide() {
                 </p>
 
                 <BlockMath math="
-                    \frac{1}{\Phi} \frac{\partial^2 \Phi}{\partial \phi^2}
+                    \frac{1}{\Phi} \frac{d^2 \Phi}{d \phi^2}
                     = - m^2
                 "/>
 
@@ -100,7 +102,115 @@ export default function ClientSide() {
                 </p>
 
                 <BlockMath math="
-                    \Phi(\phi) = C \cos(m \phi) + D \sin(m \phi)
+                    \Phi(\phi) = C_m \cos(m \phi) + D_m \sin(m \phi)
+                "/>
+
+                <p>
+                    Finally, the simplification of the PDE leads to the Associated Legendre Differential Equation for the
+                    <span className='font-bold'> angular </span>  
+                    ODE:
+                </p>
+
+                <BlockMath math="
+                    \frac{1}{\sin\theta}\frac{d}{d \theta} (\sin \theta \frac{d \Theta}{d \theta}) 
+                    + (l (l+1) - \frac{m^2}{\sin^2(\theta)}) \Theta 
+                    = 0
+                "/>
+
+                <p>
+                    With the general solution given by the Associated Legendre functions:
+                </p>
+
+                <BlockMath math="
+                    \Theta(\theta) = E P^m_l(\cos(\theta)) + F Q^m_l(\cos(\theta))
+                "/>
+
+                <p>
+                    The combined solutions of each ODE can be put back together to get the potential.
+                    The constant B is 0 in this case, so the solution does not blow up at the origin. 
+                    Furthermore, F can be set to 0, as Q would blow up at the poles. 
+                    At the same time, E is absorbed by the other constants.
+                </p>
+
+                <BlockMath math="
+                    V = \sum_{l=0}^{\infty} \sum_{m=-l}^{l} r^l P^m_l (\cos(\theta)) (C_{lm} \cos(m \phi) + D_{lm} \sin(m \phi))
+                "/>
+
+                <p>
+                    To solve for the constants, the Neumann BC is used once again. 
+                    However, before applying this condition, the sum for m is removed. 
+                    This is made possible by using the combination of azimuthal symmetry and change of axis. 
+                    By using change of axis later in the derivation, one can assume now that the sphere has this symmetry, leading to the following simplification:
+                </p>
+
+                <BlockMath math="
+                    V = V_0 + \sum_{l=1}^{\infty} A_l r^l P^0_l (\cos(\theta))
+                "/>
+
+                <p>
+                    Now the Neumann BC gives:
+                </p>
+
+                <BlockMath math="
+                    \sigma \frac{\partial V}{\partial r}\bigg|_{r=R} = J(\theta) 
+                    = \sigma \sum_{l=1}^{\infty} A_l l R^{l-1} P^0_l (\cos(\theta))
+                "/>
+
+                <p>
+                    Solving for A gives:
+                </p>
+
+                <BlockMath math="
+                    A_l = \frac{2l+1}{2 \cdot 2\pi \sigma l R^{l-1}} \int_{0}^{2 \pi} \int_{0}^{\pi} J(\theta)  P^0_l (\cos(\theta)) \sin(\theta) d \theta d \phi
+                "/>
+
+                <p>
+                    The definition for the current density is dependent on the surface of the cap. 
+                    From the following definition of the density, note that the change of axis is not yet applied.
+                    So, one can see that both the anode and cathode are at the north pole.
+                </p>
+
+                <BlockMath math="
+                    J(\theta) = \begin{cases} 
+                    \frac{I}{2 \pi R^2 (1-\cos(\alpha_A))} & \text{for } 0 \le \theta \le \alpha_A \\ 
+                    - \frac{I}{2 \pi R^2 (1-\cos(\alpha_C))} & \text{for } 0 \le \theta \le \alpha_C  
+                    \end{cases}
+                "/>
+
+                <BlockMath math="
+                \begin{aligned}
+                    A_l &= \frac{(2l+1)I}{4\pi \sigma l R^{l-1} R^2} 
+                    [ \frac{1}{1-\cos(\alpha_A)} \int_{0}^{\alpha_A} P^0_l (\cos(\theta)) \sin(\theta) d \theta 
+                    - \frac{1}{1-\cos(\alpha_C)} \int_{0}^{\alpha_C} P^0_l (\cos(\theta)) \sin(\theta) d \theta ] \\
+
+                    &= \frac{I}{\sigma l R^{l+1}} 
+                    [\frac{1}{1-\cos(\alpha_A)} (P^0_{l-1} (\cos(\alpha_A)) - P^0_{l+1} (\cos(\alpha_A))) 
+                    - \frac{1}{1-\cos(\alpha_C)} (P^0_{l-1} (\cos(\alpha_C)) - P^0_{l+1} (\cos(\alpha_C))) ]
+                \end{aligned}
+                "/>
+
+                <p>
+                    Now, this of course is not the final answer. Both the electrodes are at the north pole.
+                    To move them, change of axis is used, where the angles of the legendre functions are changed to match the electrode positions.
+                    Thus changing the axis of the function to move the north pole to the desired electrode position. Notice that our determined coefficient $A_l$ is purely a structural scalar weight, so the positional shift maps directly onto the spatial harmonics inside the potential summation:
+                </p>
+
+                <p>
+                    With:
+                </p>
+
+                <BlockMath math="
+                    \cos(\gamma_{A/C}) = \cos(\theta)\cos(\theta_{A/C}) + \sin(\theta) \sin(\theta_{A/C}) \cos(\phi - \phi_{A/C})
+                "/>
+
+                <p>
+                    Leading to the final potential solution:
+                </p>
+
+                <BlockMath math="
+                    V = V_0 + \frac{I}{\sigma} \sum_{l=1}^{\infty} \frac{1}{l} \frac{r^l}{R^{l+1}}
+                    [\frac{P^0_{l-1} (\cos(\alpha_A)) - P^0_{l+1} (\cos(\alpha_A))}{1-\cos(\alpha_A)} P^0_l(\cos(\gamma_A)) 
+                    - \frac{P^0_{l-1} (\cos(\alpha_C)) - P^0_{l+1} (\cos(\alpha_C))}{1-\cos(\alpha_C)} P^0_l(\cos(\gamma_C))]
                 "/>
 
             </div>
@@ -114,6 +224,7 @@ export default function ClientSide() {
                 layout={layout}
                 config={{ responsive: true }}
             />
+            {/* <NiiVue imageUrl="/data_1/sphere_TDCS_1_scalar_magnE.nii.gz" /> */}
         </div>
     );
 }

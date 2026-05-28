@@ -12,6 +12,7 @@
     "check-types": "turbo run check-types"
   },
   "dependencies": {
+    "@niivue/niivue": "^0.69.0",
     "katex": "^0.16.38",
     "next": "16.2.4",
     "plotly.js": "^3.4.0",
