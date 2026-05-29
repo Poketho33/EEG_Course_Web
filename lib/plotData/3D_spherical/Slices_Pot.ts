@@ -187,7 +187,7 @@ export default function Plot_3D({params, J_0} : {params: parameters, J_0: number
         ];
 
         return data;
-    }, []);
+    }, [params.R, params.alpha, params.posA, params.posC, params.sigma, params.I_tot]);
 
     return plotData;
 }

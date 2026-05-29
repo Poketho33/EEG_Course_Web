@@ -106,7 +106,7 @@ export default function Plot_3D_Surface({params, J_0} : {params: parameters, J_0
         }];
 
         return data;
-    }, [params.R, params.alpha, params.posA, params.posC]);
+    }, [params.R, params.alpha, params.posA, params.posC, params.sigma, params.I_tot]);
 
     return plotData;
 }

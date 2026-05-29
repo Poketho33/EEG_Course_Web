@@ -25,8 +25,14 @@ import dynamic from 'next/dynamic';
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
 export default function ClientSide() {
+    // use states
+    const [posA, setPosA] = useState([Math.PI / 2, 0]);
+    const [posC, setPosC] = useState([Math.PI, 0]);
+    const [sigma, setSigma] = useState(0.33);
+    const [iTot, setITot] = useState(1e-3);
+
     // Set init parameters
-    const params: parameters = {R: 0.1, sigma: 0.33, I_tot: 1e-3, alpha: 0.02, posA: [Math.PI/2, 0], posC: [Math.PI, 0]};
+    const params: parameters = {R: 0.1, sigma: sigma, I_tot: iTot, alpha: 0.02, posA: posA, posC: posC};
     const J_0 = useMemo(() => { return params.I_tot / (2 * Math.PI * params.R**2 * (1 - Math.cos(params.alpha)))}, [params.I_tot, params.R, params.alpha]);
 
     // Shared layout
@@ -208,23 +214,103 @@ export default function ClientSide() {
                 </p>
 
                 <BlockMath math="
-                    V = V_0 + \frac{I}{\sigma} \sum_{l=1}^{\infty} \frac{1}{l} \frac{r^l}{R^{l+1}}
+                    V = V_0 + \frac{I}{\sigma 2 \pi} \sum_{l=1}^{\infty} \frac{1}{l (l+1)} \frac{r^l}{R^{l+1}}
                     [\frac{P^0_{l-1} (\cos(\alpha_A)) - P^0_{l+1} (\cos(\alpha_A))}{1-\cos(\alpha_A)} P^0_l(\cos(\gamma_A)) 
                     - \frac{P^0_{l-1} (\cos(\alpha_C)) - P^0_{l+1} (\cos(\alpha_C))}{1-\cos(\alpha_C)} P^0_l(\cos(\gamma_C))]
                 "/>
 
             </div>
-            <Plot
-                data={SurfacePotPlot({params, J_0}) as Data[]}
-                layout={layout}
-                config={{ responsive: true }}
-            />
-            <Plot
-                data={SlicesPotPlot({params, J_0}) as Data[]}
-                layout={layout}
-                config={{ responsive: true }}
-            />
-            {/* <NiiVue imageUrl="/data_1/sphere_TDCS_1_scalar_magnE.nii.gz" /> */}
+            <div className="flex flex-col justify-center items-center bg-lighter rounded-lg p-6 gap-6">
+                <div className="flex flex-row justify-start items-center w-full gap-4">
+                    <label className="text-white">Anode: <InlineMath math='\theta'/> [rad]:</label>
+                    <input
+                        type="number"
+                        step="0.1"
+                        value={posA[0]}
+                        className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
+                        onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0;
+                            setPosA([val, posA[1]]); // Updates Theta while preserving Phi
+                        }}
+                    />
+
+                    <label className="text-white"><InlineMath math='\phi'/> [rad]:</label>
+                    <input
+                        type="number"
+                        step="0.1"
+                        value={posA[1]}
+                        className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
+                        onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0;
+                            setPosA([posA[0], val]);
+                        }}
+                    />
+                </div>
+                <div className="flex flex-row justify-start items-center w-full gap-4">    
+                    <label className="text-white">Cathode: <InlineMath math='\theta'/> [rad]:</label>
+                    <input
+                        type="number"
+                        step="0.1"
+                        value={posC[0]}
+                        className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
+                        onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0;
+                            setPosC([val, posC[1]]);
+                        }}
+                    />
+
+                    <label className="text-white"><InlineMath math='\phi'/> [rad]:</label>
+                    <input
+                        type="number"
+                        step="0.1"
+                        value={posC[0]}
+                        className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
+                        onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0;
+                            setPosC([val, posC[1]]);
+                        }}
+                    />
+                </div>
+                <div className="flex flex-row justify-start items-center w-full gap-4">    
+                    <label className="text-white"><InlineMath math='\sigma'/> [S/m]:</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        value={sigma}
+                        className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
+                        onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0;
+                            setSigma(val);
+                        }}
+                    />
+
+                    <label className="text-white">I [A]:</label>
+                    <input
+                        type="number"
+                        step="0.001"
+                        value={iTot}
+                        className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
+                        onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0;
+                            setITot(val);
+                        }}
+                    />
+                </div>
+
+                {/* Plots */}
+                <div className="flex flex-row justify-center items-center">
+                    <Plot
+                        data={SurfacePotPlot({params, J_0}) as Data[]}
+                        layout={layout}
+                        config={{ responsive: true }}
+                    />
+                    <Plot
+                        data={SlicesPotPlot({params, J_0}) as Data[]}
+                        layout={layout}
+                        config={{ responsive: true }}
+                    />
+                </div>
+            </div>
         </div>
     );
 }
