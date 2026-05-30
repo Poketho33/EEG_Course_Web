@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import type { Data } from 'plotly.js';
 
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
@@ -62,6 +63,22 @@ export default function SimulationPage() {
     return <div className="text-center p-20 text-white">Loading Slices...</div>;
   }
 
+  const plotData = [{
+    type: 'mesh3d',
+    x: slicedData.x,
+    y: slicedData.y,
+    z: slicedData.z,
+    i: slicedData.i,
+    j: slicedData.j,
+    k: slicedData.k,
+    intensity: slicedData.intensity,
+    intensitymode: 'cell',
+    colorscale: 'Jet',
+    showscale: true,
+    cauto: false,
+    cmax: 2.2,
+  }];
+
   return (
     <div className="p-8 bg-slate-950 min-h-screen text-white flex flex-col gap-4">
       <div className="flex flex-col gap-2 bg-slate-900 p-4 rounded-lg border border-slate-800">
@@ -80,23 +97,7 @@ export default function SimulationPage() {
 
       <div className="w-full h-[600px] border border-slate-800 rounded-lg overflow-hidden bg-slate-900">
         <Plot
-          data={[
-            {
-              type: 'mesh3d',
-              x: slicedData.x,
-              y: slicedData.y,
-              z: slicedData.z,
-              i: slicedData.i,
-              j: slicedData.j,
-              k: slicedData.k,
-              intensity: slicedData.intensity,
-              intensitymode: 'cell',
-              colorscale: 'Jet',
-              showscale: true,
-              cauto: false,
-              cmax: 2.2,
-            },
-          ]}
+          data={plotData as Data[]}
           layout={{
             autosize: true,
             paper_bgcolor: 'rgba(0,0,0,0)',
