@@ -2,7 +2,7 @@
   "name": "starter-turbo-next-web",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@11.5.0",
   "scripts": {
     "dev": "pnpm next dev --turbopack",
     "build": "next build",
@@ -13,10 +13,10 @@
   },
   "dependencies": {
     "katex": "^0.16.38",
-    "next": "16.1.6",
+    "next": "16.2.4",
     "plotly.js": "^3.4.0",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "react-katex": "^3.1.0",
     "react-plotly.js": "^2.6.0"
   },

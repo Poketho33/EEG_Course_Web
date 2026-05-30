@@ -3,18 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import headerData from "./header.json";
-import { randomPastelColor } from '@/lib/UI/RandomColor';
-import { useState, useEffect } from "react";
 
 export default function Header() {
   const pathname = usePathname();
   const header = headerData.header;
-
-    const [color, setColor] = useState('#e0e0e0');
-
-    useEffect(() => {
-        setColor(randomPastelColor());
-    }, []);
 
   return (
     <aside className="h-screen overflow-y-auto sticky top-0 w-[250px] bg-background shadow-md p-8 border-r-2 border-gray-900">
@@ -41,17 +33,15 @@ export default function Header() {
               {item.children && (
                 <ul className="flex flex-col ml-2 mt-1 gap-1">
                   {item.children.map((child) => (
-                    <li 
+                    <Link 
                       key={child.label} 
-                      style={{ backgroundColor: pathname === child.path ? color : "" }}
-                      className="hover:bg-secondary transition-colors p-2 cursor-pointer rounded-md">
-                      <Link
-                        href={child.path}
-                        className={`text-md ${pathname === child.path ? "text-background" : "text-foreground"}`}
-                      >
+                      href={child.path}
+                      className={ pathname === child.path ? 
+                        "bg-pastel_2 hover:bg-pastel_1 transition-colors p-2 cursor-pointer rounded-md text-md text-background " :
+                        "hover:bg-pastel_1 transition-colors p-2 cursor-pointer rounded-md text-md text-foreground hover:text-background"
+                      }>
                         {child.label}
-                      </Link>
-                    </li>
+                    </Link>
                   ))}
                 </ul>
               )}

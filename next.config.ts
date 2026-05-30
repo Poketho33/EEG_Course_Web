@@ -2,17 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
     reactStrictMode: true,
-
-    // images example
-    // images: {
-    //     remotePatterns: [
-    //         {
-    //             protocol: "https",
-    //             hostname: "image.tmdb.org",
-    //             pathname: "/t/p/**",
-    //         },
-    //     ],
-    // },
+    compress: true,
 };
 
 export default nextConfig;

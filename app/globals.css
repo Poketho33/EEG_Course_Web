@@ -1,19 +1,34 @@
 @tailwind base;
 @tailwind components;
-@tailwind utilities;
+@tailwind utilities;z
 
 :root {
   --background: #ededed;
   --foreground: #0c0c0c;
-  --secondary: #c72125;
   --lighter: #1a1a1a;
   --lighter2: #aeaeae;
+  --lighter-3: #434343;
+
+  --pastel-1: #c72125;
+  --pastel-2: #c72125;
+  --pastel-3: #c72125;
+  --pastel-4: #c72125;
+  --pastel-5: #c72125;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0c0c0c;
     --foreground: #ededed;
+    --lighter: #1a1a1a;
+    --lighter2: #aeaeae;
+    --lighter-3: #565656;
+
+    --pastel-1: #c72125;
+    --pastel-2: #c72125;
+    --pastel-3: #c72125;
+    --pastel-4: #c72125;
+    --pastel-5: #c72125;
   }
 }
 
