@@ -16,8 +16,8 @@ export default async function TMS_Theory() {
         <br />
         Part 2.1 - 3D Homogeneous Spherical Medium
       </h1>
-      <Shells/>
       <ClientSide/>
+      <Shells/>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import type { ExtendedData } from '../type';
 
 import type { parameters } from '@/app/courses/tdcs/theory/2/clientSide';
 
-export default function Plot_3D_Surface({params, J_0} : {params: parameters, J_0: number}) {
+export default function Plot_3D_Surface({params} : {params: parameters}) {
     // Resolution
     const nTheta = 50, nPhi = 100, L_max  = 50;
 
@@ -43,22 +43,29 @@ export default function Plot_3D_Surface({params, J_0} : {params: parameters, J_0
         }
 
         // Loop solver
-        let pPrevCap = 1;
-        let pCurrCap = Math.cos(params.alpha);
+        let P_prev_alpha_A = 1;
+        let P_curr_alpha_A = Math.cos(params.posA[2]);
+        let P_prev_alpha_C = 1;
+        let P_curr_alpha_C = Math.cos(params.posC[2]);
 
+        const scalarConst = params.I_tot / (params.sigma * 2 * Math.PI);
         for (let l = 1; l <= L_max; l++) {
-            const pNextCap = ((2 * l + 1) * Math.cos(params.alpha) * pCurrCap - l * pPrevCap) / (l + 1);
-            const capFactor = pPrevCap - pNextCap;
-            const termConst = J_0 / (params.sigma * l * (2 * l + 1) * (params.R ** (l - 1)));
-            const EtermConst = J_0 / (params.sigma * (2 * l + 1));
+            const P_next_alpha_A = ((2 * l + 1) * Math.cos(params.posA[2]) * P_curr_alpha_A - l * P_prev_alpha_A) / (l + 1);
+            const P_next_alpha_C = ((2 * l + 1) * Math.cos(params.posC[2]) * P_curr_alpha_C - l * P_prev_alpha_C) / (l + 1);
+
+            const cap_factor_A = P_prev_alpha_A - P_next_alpha_A; 
+            const cap_factor_C = P_prev_alpha_C - P_next_alpha_C; 
+            
+            const termConst = scalarConst / (l * (2 * l + 1) * params.R);
+            const EtermConst = scalarConst / (params.R ** 2 * (2 * l + 1));
 
             for (let i = 0; i < nTheta; i++) {
                 for (let j = 0; j < nPhi; j++) {
                     const cell = rec[i][j];
                     
                     // At r = R, so no inside points are calculated
-                    v[i][j] += termConst * (params.R ** l) * capFactor * (cell.pCurrA - cell.pCurrC);
-                    E[i][j] += EtermConst * capFactor * (cell.pCurrA - cell.pCurrC);
+                    v[i][j] += termConst * (cap_factor_A / (1-Math.cos(params.posA[2])) * cell.pCurrA - cap_factor_C / (1-Math.cos(params.posC[2])) * cell.pCurrC);
+                    E[i][j] += EtermConst * (cap_factor_A / (1-Math.cos(params.posA[2])) * cell.pCurrA - cap_factor_C / (1-Math.cos(params.posC[2])) * cell.pCurrC);
 
                     const pNextA = ((2 * l + 1) * cell.cosGammaA * cell.pCurrA - l * cell.pPrevA) / (l + 1);
                     const pNextC = ((2 * l + 1) * cell.cosGammaC * cell.pCurrC - l * cell.pPrevC) / (l + 1);
@@ -66,7 +73,8 @@ export default function Plot_3D_Surface({params, J_0} : {params: parameters, J_0
                     cell.pPrevC = cell.pCurrC; cell.pCurrC = pNextC;
                 }
             }
-            pPrevCap = pCurrCap; pCurrCap = pNextCap;
+            P_prev_alpha_A = P_curr_alpha_A; P_curr_alpha_A = P_next_alpha_A;
+            P_prev_alpha_C = P_curr_alpha_C; P_curr_alpha_C = P_next_alpha_C;
         }
 
         const deltaTheta = Math.PI / (nTheta - 1);
@@ -106,7 +114,7 @@ export default function Plot_3D_Surface({params, J_0} : {params: parameters, J_0
         }];
 
         return data;
-    }, [params.R, params.alpha, params.posA, params.posC, params.sigma, params.I_tot]);
+    }, [params.R, params.posA, params.posC, params.sigma, params.I_tot]);
 
     return plotData;
 }

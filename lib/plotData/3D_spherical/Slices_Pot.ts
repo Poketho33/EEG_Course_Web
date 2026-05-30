@@ -3,12 +3,11 @@
 import { useMemo } from 'react';
 import type { ExtendedData } from '../type';
 
-
 import { linspace } from '@/lib/math/MathLibFunctions';
 
 import type { parameters } from '@/app/courses/tdcs/theory/2/clientSide';
 
-export default function Plot_3D({params, J_0} : {params: parameters, J_0: number}) {
+export default function Plot_3D({params} : {params: parameters}) {
     const plotData = useMemo(() => {
         // Resolution
         const Ngrid = 100, L_max  = 50;
@@ -87,25 +86,29 @@ export default function Plot_3D({params, J_0} : {params: parameters, J_0: number
         const allSlices = [sliceYZ, sliceXZ, sliceXY];
 
         // Bonnet's recursion
-        let pPrevCap = 1;
-        let pCurrCap = Math.cos(params.alpha);
+        let P_prev_alpha_A = 1;
+        let P_curr_alpha_A = Math.cos(params.posA[2]);
+        let P_prev_alpha_C = 1;
+        let P_curr_alpha_C = Math.cos(params.posC[2]);
         
         // Solver loop
+        const scalarConst = params.I_tot / (params.sigma * 2 * Math.PI);
         for(let l = 1; l < L_max; l++){
-            const pNextCap = ((2 * l + 1) * Math.cos(params.alpha) * pCurrCap - l * pPrevCap) / (l + 1);
-            const cap_factor = (pPrevCap - pNextCap); 
+            const P_next_alpha_A = ((2 * l + 1) * Math.cos(params.posA[2]) * P_curr_alpha_A - l * P_prev_alpha_A) / (l + 1);
+            const P_next_alpha_C = ((2 * l + 1) * Math.cos(params.posC[2]) * P_curr_alpha_C - l * P_prev_alpha_C) / (l + 1);
+            const cap_factor_A = P_prev_alpha_A - P_next_alpha_A; 
+            const cap_factor_C = P_prev_alpha_C - P_next_alpha_C;  
 
-            const term_const = J_0 / (params.sigma * l * (2*l + 1) * params.R**(l-1));
-            const E_radial_term = J_0 / (params.sigma * (2 * l + 1) * params.R ** (l - 1));
+            const termConst = scalarConst / (l * (2 * l + 1) * params.R ** (l+1));
+            const EtermConst = scalarConst / (params.R ** (l+1) * (2 * l + 1));
 
             allSlices.forEach(slice => {
                 for (let i = 0; i < Ngrid; i++) {
                     for (let j = 0; j < Ngrid; j++) {
                         const r = Math.sqrt(slice.x[i][j] ** 2 + slice.y[i][j] ** 2 + slice.z[i][j] ** 2);
                         if (r <= params.R) {
-                            slice.v[i][j] += term_const * r ** l * cap_factor * (slice.rec[i][j].pCurrA - slice.rec[i][j].pCurrC);
-                            
-                            slice.E[i][j] += E_radial_term * r ** (l - 1) * cap_factor * (slice.rec[i][j].pCurrA - slice.rec[i][j].pCurrC);
+                            slice.v[i][j] += termConst * r ** l * (cap_factor_A / (1-Math.cos(params.posA[2])) * slice.rec[i][j].pCurrA - cap_factor_C / (1-Math.cos(params.posC[2])) * slice.rec[i][j].pCurrC);
+                            slice.E[i][j] += EtermConst * r ** (l - 1) * (cap_factor_A / (1-Math.cos(params.posA[2])) * slice.rec[i][j].pCurrA - cap_factor_C / (1-Math.cos(params.posC[2])) * slice.rec[i][j].pCurrC);
 
                             let pNextA = ((2 * l + 1) * slice.rec[i][j].cosGammaA * slice.rec[i][j].pCurrA - l * slice.rec[i][j].pPrevA) / (l + 1);
                             let pNextC = ((2 * l + 1) * slice.rec[i][j].cosGammaC * slice.rec[i][j].pCurrC - l * slice.rec[i][j].pPrevC) / (l + 1);
@@ -120,8 +123,8 @@ export default function Plot_3D({params, J_0} : {params: parameters, J_0: number
             });
 
             // Set recursion to next value
-            pPrevCap = pCurrCap;
-            pCurrCap = pNextCap;
+            P_prev_alpha_A = P_curr_alpha_A; P_curr_alpha_A = P_next_alpha_A;
+            P_prev_alpha_C = P_curr_alpha_C; P_curr_alpha_C = P_next_alpha_C;
         }
 
         let minV = Infinity;
@@ -187,7 +190,7 @@ export default function Plot_3D({params, J_0} : {params: parameters, J_0: number
         ];
 
         return data;
-    }, [params.R, params.alpha, params.posA, params.posC, params.sigma, params.I_tot]);
+    }, [params.R, params.posA, params.posC, params.sigma, params.I_tot]);
 
     return plotData;
 }

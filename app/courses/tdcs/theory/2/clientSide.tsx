@@ -16,7 +16,6 @@ export type parameters = {
     R: number;
     sigma: number; 
     I_tot: number; 
-    alpha: number;
     posA: number[]; // [Theta, Phi] 
     posC: number[];
 };
@@ -26,14 +25,14 @@ const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
 
 export default function ClientSide() {
     // use states
-    const [posA, setPosA] = useState([Math.PI / 2, 0]);
-    const [posC, setPosC] = useState([Math.PI, 0]);
+    const [posA, setPosA] = useState([Math.PI / 2, 0, 0.02]);
+    const [posC, setPosC] = useState([Math.PI, 0, 0.02]);
     const [sigma, setSigma] = useState(0.33);
     const [iTot, setITot] = useState(1e-3);
 
     // Set init parameters
-    const params: parameters = {R: 0.1, sigma: sigma, I_tot: iTot, alpha: 0.02, posA: posA, posC: posC};
-    const J_0 = useMemo(() => { return params.I_tot / (2 * Math.PI * params.R**2 * (1 - Math.cos(params.alpha)))}, [params.I_tot, params.R, params.alpha]);
+    const params: parameters = {R: 0.1, sigma: sigma, I_tot: iTot, posA: posA, posC: posC};
+    // const J_0 = useMemo(() => { return params.I_tot / (2 * Math.PI * params.R**2 * (1 - Math.cos(params.alpha)))}, [params.I_tot, params.R, params.alpha]);
 
     // Shared layout
     const layout: Partial<Layout> = {
@@ -230,7 +229,7 @@ export default function ClientSide() {
                         className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
                         onChange={(e) => {
                             const val = parseFloat(e.target.value) || 0;
-                            setPosA([val, posA[1]]); // Updates Theta while preserving Phi
+                            setPosA([val, posA[1], posA[2]]); // Updates Theta while preserving Phi
                         }}
                     />
 
@@ -242,7 +241,19 @@ export default function ClientSide() {
                         className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
                         onChange={(e) => {
                             const val = parseFloat(e.target.value) || 0;
-                            setPosA([posA[0], val]);
+                            setPosA([posA[0], val, posA[2]]);
+                        }}
+                    />
+
+                    <label className="text-white"><InlineMath math='\alpha'/> [rad]:</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        value={posA[2]}
+                        className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
+                        onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0;
+                            setPosA([posA[0], posA[1], val]);
                         }}
                     />
                 </div>
@@ -255,7 +266,7 @@ export default function ClientSide() {
                         className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
                         onChange={(e) => {
                             const val = parseFloat(e.target.value) || 0;
-                            setPosC([val, posC[1]]);
+                            setPosC([val, posC[1], posC[2]]);
                         }}
                     />
 
@@ -267,7 +278,19 @@ export default function ClientSide() {
                         className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
                         onChange={(e) => {
                             const val = parseFloat(e.target.value) || 0;
-                            setPosC([val, posC[1]]);
+                            setPosC([posC[0], val, posC[2]]);
+                        }}
+                    />
+
+                    <label className="text-white"><InlineMath math='\alpha'/> [rad]:</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        value={posC[2]}
+                        className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
+                        onChange={(e) => {
+                            const val = parseFloat(e.target.value) || 0;
+                            setPosC([posC[0], posC[1], val]);
                         }}
                     />
                 </div>
@@ -300,12 +323,12 @@ export default function ClientSide() {
                 {/* Plots */}
                 <div className="flex flex-row justify-center items-center">
                     <Plot
-                        data={SurfacePotPlot({params, J_0}) as Data[]}
+                        data={SurfacePotPlot({params}) as Data[]}
                         layout={layout}
                         config={{ responsive: true }}
                     />
                     <Plot
-                        data={SlicesPotPlot({params, J_0}) as Data[]}
+                        data={SlicesPotPlot({params}) as Data[]}
                         layout={layout}
                         config={{ responsive: true }}
                     />
