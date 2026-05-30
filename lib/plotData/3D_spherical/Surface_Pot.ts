@@ -1,11 +1,13 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { ExtendedData } from '../type';
+
+import type { ExtendedData } from '@/lib/plotData/type';
+import { plotTypes } from '@/lib/plotData/type';
 
 import type { parameters } from '@/app/courses/tdcs/theory/2/clientSide';
 
-export default function Plot_3D_Surface({params} : {params: parameters}) {
+export default function Plot_3D_Surface({params, plotType} : {params: parameters, plotType: plotTypes}) {
     // Resolution
     const nTheta = 50, nPhi = 100, L_max  = 50;
 
@@ -104,17 +106,21 @@ export default function Plot_3D_Surface({params} : {params: parameters}) {
             }
         }
 
+        return {x, y, z, v, E};
+    }, [params.R, params.posA, params.posC, params.sigma, params.I_tot]);
+
+    const returnData = useMemo(() => {
         const data: ExtendedData[] = [{
             type: 'surface' as const,
-            x: x,
-            y: y,
-            z: z,
-            surfacecolor: E,
+            x: plotData.x,
+            y: plotData.y,
+            z: plotData.z,
+            surfacecolor: plotType == plotTypes.potential ? plotData.v : plotData.E,
             colorscale: [[0, '#000000'], [0.365, '#ff0000'], [0.746, '#ffff00'], [1, '#ffffff']] as [number, string][],
         }];
 
-        return data;
-    }, [params.R, params.posA, params.posC, params.sigma, params.I_tot]);
+        return data
+    }, [plotData, plotType])
 
-    return plotData;
+    return returnData;
 }

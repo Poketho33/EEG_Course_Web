@@ -1,13 +1,15 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { ExtendedData } from '../type';
+
+import type { ExtendedData } from '@/lib/plotData/type';
+import { plotTypes } from '@/lib/plotData/type';
 
 import { linspace } from '@/lib/math/MathLibFunctions';
 
 import type { parameters } from '@/app/courses/tdcs/theory/2/clientSide';
 
-export default function Plot_3D({params} : {params: parameters}) {
+export default function Plot_3D({params, plotType} : {params: parameters, plotType: plotTypes}) {
     const plotData = useMemo(() => {
         // Resolution
         const Ngrid = 100, L_max  = 50;
@@ -172,25 +174,33 @@ export default function Plot_3D({params} : {params: parameters}) {
                 }
             }
         });
+        
+        return {sliceXY, sliceXZ, sliceYZ, minV, minE, maxV, maxE}
+    }, [params.R, params.posA, params.posC, params.sigma, params.I_tot]);
 
-
+    const returnData = useMemo(() => {
         const sharedSurface = {
             type: 'surface' as const,
             colorscale: [[0, '#000000'], [0.365, '#ff0000'], [0.746, '#ffff00'], [1, '#ffffff']] as [number, string][],
             // Shared colorbar
             cauto: false,
-            cmin: minE,
-            cmax: maxE,
+            cmin: plotType == plotTypes.potential ? plotData.minV : plotData.minE,
+            cmax: plotType == plotTypes.potential ? plotData.maxV : plotData.maxE,
         };
 
-        const data: ExtendedData[] = [
-            { ...sharedSurface, x: sliceYZ.x, y: sliceYZ.y, z: sliceYZ.z, surfacecolor: sliceYZ.E },
-            { ...sharedSurface, x: sliceXZ.x, y: sliceXZ.y, z: sliceXZ.z, surfacecolor: sliceXZ.E },
-            { ...sharedSurface, x: sliceXY.x, y: sliceXY.y, z: sliceXY.z, surfacecolor: sliceXY.E }
+        const data: ExtendedData[] = plotType == plotTypes.potential ? 
+        [
+            { ...sharedSurface, x: plotData.sliceYZ.x, y: plotData.sliceYZ.y, z: plotData.sliceYZ.z, surfacecolor: plotData.sliceYZ.v },
+            { ...sharedSurface, x: plotData.sliceXZ.x, y: plotData.sliceXZ.y, z: plotData.sliceXZ.z, surfacecolor: plotData.sliceXZ.v },
+            { ...sharedSurface, x: plotData.sliceXY.x, y: plotData.sliceXY.y, z: plotData.sliceXY.z, surfacecolor: plotData.sliceXY.v }
+        ] : [
+            { ...sharedSurface, x: plotData.sliceYZ.x, y: plotData.sliceYZ.y, z: plotData.sliceYZ.z, surfacecolor: plotData.sliceYZ.E },
+            { ...sharedSurface, x: plotData.sliceXZ.x, y: plotData.sliceXZ.y, z: plotData.sliceXZ.z, surfacecolor: plotData.sliceXZ.E },
+            { ...sharedSurface, x: plotData.sliceXY.x, y: plotData.sliceXY.y, z: plotData.sliceXY.z, surfacecolor: plotData.sliceXY.E }
         ];
 
         return data;
-    }, [params.R, params.posA, params.posC, params.sigma, params.I_tot]);
+    }, [plotData, plotType])
 
-    return plotData;
+    return returnData;
 }

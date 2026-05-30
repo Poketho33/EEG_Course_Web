@@ -7,16 +7,12 @@ import 'katex/dist/katex.min.css';
 import { BlockMath, InlineMath } from 'react-katex';
 
 import { linspace } from '@/lib/math/MathLibFunctions';
+import { plotTypes } from '@/lib/plotData/type';
 
 import Derivation from "@/components/Derivation";
 import Slider from "@/components/Slider";
 
 const Plot = dynamic(() => import('react-plotly.js'), { ssr: false });
-
-enum plotTypes{
-    potential,
-    electric
-};
 
 type J_Piece = {
     angle: number;

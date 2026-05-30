@@ -4,9 +4,9 @@ import 'katex/dist/katex.min.css';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { BlockMath, InlineMath } from 'react-katex';
 import type { Data, Layout } from 'plotly.js';
-import NiiVue from "@/lib/niivue";
 
 import Derivation from "@/components/Derivation";
+import { plotTypes } from '@/lib/plotData/type';
 
 import SlicesPotPlot from "@/lib/plotData/3D_spherical/Slices_Pot";
 import SurfacePotPlot from "@/lib/plotData/3D_spherical/Surface_Pot";
@@ -29,10 +29,10 @@ export default function ClientSide() {
     const [posC, setPosC] = useState([Math.PI, 0, 0.02]);
     const [sigma, setSigma] = useState(0.33);
     const [iTot, setITot] = useState(1e-3);
+    const [plotType, setPlotType] = useState<plotTypes>(plotTypes.potential);
 
     // Set init parameters
     const params: parameters = {R: 0.1, sigma: sigma, I_tot: iTot, posA: posA, posC: posC};
-    // const J_0 = useMemo(() => { return params.I_tot / (2 * Math.PI * params.R**2 * (1 - Math.cos(params.alpha)))}, [params.I_tot, params.R, params.alpha]);
 
     // Shared layout
     const layout: Partial<Layout> = {
@@ -294,45 +294,75 @@ export default function ClientSide() {
                         }}
                     />
                 </div>
-                <div className="flex flex-row justify-start items-center w-full gap-4">    
-                    <label className="text-white"><InlineMath math='\sigma'/> [S/m]:</label>
-                    <input
-                        type="number"
-                        step="0.01"
-                        value={sigma}
-                        className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
-                        onChange={(e) => {
-                            const val = parseFloat(e.target.value) || 0;
-                            setSigma(val);
-                        }}
-                    />
+                <div className="flex flex-row justify-between items-center w-full gap-4">    
+                    <div className="flex flex-row items-center gap-4">
+                        <label className="text-white"><InlineMath math='\sigma'/> [S/m]:</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            value={sigma}
+                            className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
+                            onChange={(e) => {
+                                const val = parseFloat(e.target.value) || 0;
+                                setSigma(val);
+                            }}
+                        />
 
-                    <label className="text-white">I [A]:</label>
-                    <input
-                        type="number"
-                        step="0.001"
-                        value={iTot}
-                        className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
-                        onChange={(e) => {
-                            const val = parseFloat(e.target.value) || 0;
-                            setITot(val);
-                        }}
-                    />
+                        <label className="text-white">I [A]:</label>
+                        <input
+                            type="number"
+                            step="0.001"
+                            value={iTot}
+                            className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
+                            onChange={(e) => {
+                                const val = parseFloat(e.target.value) || 0;
+                                setITot(val);
+                            }}
+                        />
+                    </div>
+                    <div className="flex flex-row items-center gap-4">
+                        <button
+                            className={plotType === plotTypes.potential ? "bg-pastel_4 text-background h-full p-2 rounded-lg" : "p-2 rounded-lg"}
+                            onClick={() => setPlotType(plotTypes.potential)}
+                        >
+                            Potential
+                        </button>
+                        <button
+                            className={plotType === plotTypes.electric ? "bg-pastel_4 text-background h-full p-2 rounded-lg" : "p-2 rounded-lg"}
+                            onClick={() => setPlotType(plotTypes.electric)}
+                        >
+                            Electric
+                        </button>
+                    </div>
                 </div>
 
                 {/* Plots */}
                 <div className="flex flex-row justify-center items-center">
                     <Plot
-                        data={SurfacePotPlot({params}) as Data[]}
+                        data={SurfacePotPlot({params, plotType}) as Data[]}
                         layout={layout}
                         config={{ responsive: true }}
                     />
                     <Plot
-                        data={SlicesPotPlot({params}) as Data[]}
+                        data={SlicesPotPlot({params, plotType}) as Data[]}
                         layout={layout}
                         config={{ responsive: true }}
                     />
                 </div>
+
+            </div>
+
+            <div className="space-y-6 max-w-[600px]">
+                {/* Text for shells plot */}
+                <p>
+                    The homogeneous solution alters from changes in the anode and cathode positions. 
+                    However, most other properties still act as scalars. 
+                    This changes in the multiple shell model. 
+                    This model has mutliple shells with their individual radii and conductivities.
+                    This means that the B constant earlier cannot be omitted, and that the Neumann boundary condition must be applied at each shell edge. 
+                    Unfortunately, the mathematical solution is much harder to derive because of this. 
+                    Instead, an FEM is used. An FEM is ...
+                </p>
             </div>
         </div>
     );
