@@ -95,7 +95,6 @@ export default function SimulationPage() {
               showscale: true,
               cauto: false,
               cmax: 2.2,
-              colorbar: { title: 'E-Field (V/m)', tickcolor: '#fff', font: { color: '#fff' } },
             },
           ]}
           layout={{
