@@ -229,7 +229,7 @@ export default function ClientSide() {
                         className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
                         onChange={(e) => {
                             const val = parseFloat(e.target.value) || 0;
-                            setPosA([val, posA[1], posA[2]]); // Updates Theta while preserving Phi
+                            setPosA([val, posA[1], posA[2]]);
                         }}
                     />
 
