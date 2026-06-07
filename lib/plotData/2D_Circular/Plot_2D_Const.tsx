@@ -66,7 +66,7 @@ function createQuiverTraces(
 }
 
 // Parameters
-const R = 0.01, sigma = 0.33, I_tot = 1e-3, alpha = 0.2;
+const R = 0.1, sigma = 0.33, I_tot = 1e-3;
 const Ngrid = 200;
 
 export default function App() {
@@ -98,21 +98,12 @@ export default function App() {
     const z = useMemo(() => {
         const z = zMask.map(row => [...row]);
         // Potential field
-        // solve first n elements of the Fourier
         for (let n = 1; n < 15; n++) {
-            // const Cn = 1 / (sigma * n ** 2 * R ** (n - 1) * Math.PI);
             const Cn = 1 / (sigma * n ** 2 * R ** n * Math.PI);
 
             let An = 0; // multiplies cos(n * th_grid)
             let Bn = 0; // multiplies sin(n * th_grid)
 
-            // for (const piece of Jpw) {
-            //     // An += piece.sign * I_tot / (2 * piece.alpha * R) * (Math.sin(n * (piece.angle + piece.alpha)) - Math.sin(n * (piece.angle - piece.alpha)));
-            //     An += piece.sign * I_tot / (2 * piece.alpha) * (Math.sin(n * (piece.angle + piece.alpha)) - Math.sin(n * (piece.angle - piece.alpha)));
-            //     Bn += piece.sign * I_tot / (2 * piece.alpha) * (-Math.cos(n * (piece.angle + piece.alpha)) + Math.cos(n * (piece.angle - piece.alpha)));
-            // }
-
-            // use trig functions to improve the code above:
             for (const piece of Jpw) {
                 const scale = piece.sign * I_tot / piece.alpha * Math.sin(n * piece.alpha);
                 An += scale * Math.cos(n * piece.angle);

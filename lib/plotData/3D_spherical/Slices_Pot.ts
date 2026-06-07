@@ -95,7 +95,7 @@ export default function Plot_3D({params, plotType} : {params: parameters, plotTy
         
         // Solver loop
         const scalarConst = params.I_tot / (params.sigma * 2 * Math.PI);
-        for(let l = 1; l < L_max; l++){
+        for(let l = 1; l <= L_max; l++){
             const P_next_alpha_A = ((2 * l + 1) * Math.cos(params.posA[2]) * P_curr_alpha_A - l * P_prev_alpha_A) / (l + 1);
             const P_next_alpha_C = ((2 * l + 1) * Math.cos(params.posC[2]) * P_curr_alpha_C - l * P_prev_alpha_C) / (l + 1);
             const cap_factor_A = P_prev_alpha_A - P_next_alpha_A; 

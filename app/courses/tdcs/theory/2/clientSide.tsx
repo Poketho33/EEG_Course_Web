@@ -274,7 +274,7 @@ export default function ClientSide() {
                     <input
                         type="number"
                         step="0.1"
-                        value={posC[0]}
+                        value={posC[1]}
                         className="bg-transparent text-white border border-gray-600 rounded px-2 py-1"
                         onChange={(e) => {
                             const val = parseFloat(e.target.value) || 0;

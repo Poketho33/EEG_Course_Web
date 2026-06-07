@@ -6,3 +6,11 @@ export enum plotTypes{
     potential,
     electric
 };
+
+export type parameters = {
+    R: number;
+    sigma: number; 
+    I_tot: number; 
+    posA: number[]; // [Theta, Phi] 
+    posC: number[];
+};
